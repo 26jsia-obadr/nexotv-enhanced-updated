@@ -12,6 +12,19 @@ const log = makeLogger();
 const PREFETCH_MAX_BYTES = env.PREFETCH_MAX_BYTES;
 const PREFETCH_ENABLED = env.PREFETCH_ENABLED;
 
+function redactUrl(value: string): string {
+    try {
+        const parsed = new URL(value);
+        parsed.username = '';
+        parsed.password = '';
+        parsed.search = '';
+        parsed.hash = '';
+        return parsed.toString();
+    } catch {
+        return '[invalid url]';
+    }
+}
+
 router.post('/api/prefetch', requireAuth, async (req, res) => {
     if (!PREFETCH_ENABLED) return res.status(403).json({ error: 'Prefetch disabled by server' });
 
@@ -20,14 +33,14 @@ router.post('/api/prefetch', requireAuth, async (req, res) => {
     if (!/^https?:\/\//i.test(url)) return res.status(400).json({ error: 'Only http(s) URLs allowed' });
 
     try {
-        log.debug('Prefetch start', { url, purpose });
+        log.debug('Prefetch start', { url: redactUrl(url), purpose });
         const fetched = await fetchPublicUrl(url, {
             method: 'GET',
             headers: { 'User-Agent': 'NexoTV Prefetch/2.0' }
         }, env.PREFETCH_TIMEOUT_MS);
 
         if (!fetched.ok) {
-            log.debug('Prefetch non-OK', fetched.status, url);
+            log.debug('Prefetch non-OK', fetched.status, redactUrl(url));
             return res.status(502).json({ error: `Fetch failed (${fetched.status})` });
         }
 

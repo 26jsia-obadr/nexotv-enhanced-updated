@@ -17,6 +17,7 @@ export function useManifestPoll() {
   let startTime = 0
   let baselinePct = 0
   let manualPhase = false
+  let pollGeneration = 0
 
   function setProgress(pct: number, label?: string) {
     progress.value = Math.min(100, pct)
@@ -38,6 +39,7 @@ export function useManifestPoll() {
 
   function hideOverlay() {
     visible.value = false
+    pollGeneration++
     if (pollTimer) { clearTimeout(pollTimer); pollTimer = null }
   }
 
@@ -51,7 +53,8 @@ export function useManifestPoll() {
     return 'Almost done…'
   }
 
-  function scheduleNext(elapsed: number) {
+  function scheduleNext(elapsed: number, generation: number) {
+    if (generation !== pollGeneration) return
     if (isReady.value) return
     if (elapsed > MAX_WAIT_MS) {
       message.value = 'Taking longer than expected.'
@@ -63,7 +66,8 @@ export function useManifestPoll() {
     pollTimer = setTimeout(attemptPoll, POLL_INTERVAL_MS)
   }
 
-  function attemptPoll() {
+  function attemptPoll(generation = pollGeneration) {
+    if (generation !== pollGeneration) return
     if (manualPhase || isReady.value) return
     const elapsed = Date.now() - startTime
     if (progress.value < baselinePct + 95) {
@@ -83,19 +87,20 @@ export function useManifestPoll() {
           appendDetail('Manifest ready.')
           return
         }
-        scheduleNext(elapsed)
+        scheduleNext(elapsed, generation)
       })
-      .catch(() => scheduleNext(elapsed))
+      .catch(() => scheduleNext(elapsed, generation))
   }
 
   function startPolling(mUrl: string, sUrl: string, startPct = 50) {
+    pollGeneration++
     manifestUrl.value = mUrl
     stremioUrl.value = sUrl
     baselinePct = startPct
     manualPhase = false
     startTime = Date.now()
     isReady.value = false
-    attemptPoll()
+    attemptPoll(pollGeneration)
   }
 
   function exitManualPhase() {

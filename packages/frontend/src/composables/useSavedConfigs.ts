@@ -13,6 +13,7 @@ const state = reactive({
   items: [] as SavedConfigMeta[],
   loaded: false,
 })
+let refreshPromise: Promise<void> | null = null
 
 function check401(status: number) {
   if (status === 401) { useAuth().markUnauthenticated(); return true }
@@ -20,7 +21,11 @@ function check401(status: number) {
 }
 
 export function useSavedConfigs() {
-  async function refresh() {
+  async function refresh(force = false) {
+    if (state.loaded && !force) return
+    if (refreshPromise) return refreshPromise
+
+    refreshPromise = (async () => {
     try {
       const r = await fetch('/api/configs')
       if (check401(r.status)) return
@@ -30,6 +35,13 @@ export function useSavedConfigs() {
       state.items = []
     } finally {
       state.loaded = true
+    }
+    })()
+
+    try {
+      await refreshPromise
+    } finally {
+      refreshPromise = null
     }
   }
 
@@ -42,7 +54,7 @@ export function useSavedConfigs() {
     if (check401(r.status)) throw new Error('Session expired — please sign in again.')
     if (!r.ok) throw new Error('Save failed')
     const meta = await r.json()
-    await refresh()
+    await refresh(true)
     return meta
   }
 
@@ -56,7 +68,7 @@ export function useSavedConfigs() {
   async function remove(id: string) {
     const r = await fetch('/api/configs/' + encodeURIComponent(id), { method: 'DELETE' })
     if (check401(r.status)) return
-    await refresh()
+    await refresh(true)
   }
 
   return { state, refresh, save, get, remove }

@@ -13,7 +13,6 @@ import { getCategories as stalkerCategories } from '../providers/stalkerProvider
 import { validatePublicUrl } from '../utils/validateUrl';
 import * as viewLog from '../utils/viewLog';
 import createAddon from '../addon/builder';
-import { M3UEPGAddon } from '../addon/M3UEPGAddon';
 
 const router = Router();
 
@@ -94,9 +93,11 @@ router.post('/api/channels/preview', requireAuth, async (req, res) => {
         return res.status(400).json({ error: 'Unsupported provider' });
     }
 
-    const addon = new M3UEPGAddon({ ...rawConfig, hiddenChannels: [] });
+    const config = { ...rawConfig, hiddenChannels: [] };
     try {
-        await addon.updateData(true);
+        const iface: any = await createAddon(config);
+        const addon = iface.addonInstance;
+        await addon.refreshOnFirstCatalogRequest();
         const channels = addon.channels
             .filter((item: any) => (item.mediaType || 'tv') === 'tv')
             .map((item: any) => ({
@@ -108,8 +109,6 @@ router.post('/api/channels/preview', requireAuth, async (req, res) => {
         res.json({ channels });
     } catch {
         res.status(502).json({ error: 'Unable to load channels' });
-    } finally {
-        addon._evictFromMemory();
     }
 });
 

@@ -124,7 +124,7 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, inject, onMounted } from 'vue'
+import { reactive, ref, inject, onMounted, computed } from 'vue'
 import { useDecodedToken } from '../composables/useDecodedToken'
 import { useAddonInfo } from '../composables/useAddonInfo'
 import CategorySelector, { type CategoryEntry } from './CategorySelector.vue'
@@ -141,7 +141,7 @@ const auth = useAuth()
 
 const oc = inject<any>('overlayControl')!
 const { info: addonInfo } = useAddonInfo()
-const addonName = addonInfo.value?.name ?? 'NexoTV-Enhanced'
+const addonName = computed(() => addonInfo.value?.name ?? 'NexoTV-Enhanced')
 
 const showPwd = ref(false)
 let originalPassword = ''
@@ -529,8 +529,7 @@ async function handleSubmit() {
   oc.appendDetail(`EPG Mode: ${enableEpgInitial ? (epgMode === 'custom' ? 'Custom URL' : 'Panel XMLTV') : 'Disabled'}`)
 
   try {
-    const caps = await fetch('/api/capabilities').then(r => r.json()).catch(() => ({}))
-    if (!caps.encryptionEnabled) {
+    if (!addonInfo.value?.encryptionEnabled) {
       oc.appendDetail('⚠ WARNING: Server has no CONFIG_SECRET set. Your Xtream password is base64-encoded (not encrypted) in the manifest URL. Do not share this link publicly.')
     }
   } catch {}

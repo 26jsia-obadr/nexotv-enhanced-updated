@@ -4,6 +4,7 @@
   "scripts": {
     "dev": "concurrently \"pnpm --filter backend dev\" \"pnpm --filter frontend dev\"",
     "build": "pnpm --filter frontend build && pnpm --filter backend build",
+    "test": "pnpm --filter backend test",
     "start": "pnpm --filter backend start"
   },
   "devDependencies": {

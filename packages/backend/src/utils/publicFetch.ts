@@ -12,11 +12,47 @@ export async function fetchPublicUrl(url: string, options: RequestInit = {}, tim
         let response: Response;
         try {
             response = await fetch(current, { ...options, redirect: 'manual', signal: controller.signal });
-        } finally {
+        } catch (error) {
             clearTimeout(timer);
+            throw error;
         }
 
-        if (![301, 302, 303, 307, 308].includes(response.status)) return response;
+        if (![301, 302, 303, 307, 308].includes(response.status)) {
+            if (!response.body) {
+                clearTimeout(timer);
+                return response;
+            }
+
+            const reader = response.body.getReader();
+            const body = new ReadableStream<Uint8Array>({
+                async pull(streamController) {
+                    try {
+                        const result = await reader.read();
+                        if (result.done) {
+                            clearTimeout(timer);
+                            streamController.close();
+                        } else {
+                            streamController.enqueue(result.value);
+                        }
+                    } catch (error) {
+                        clearTimeout(timer);
+                        streamController.error(error);
+                    }
+                },
+                async cancel(reason) {
+                    clearTimeout(timer);
+                    await reader.cancel(reason);
+                },
+            });
+
+            return new Response(body, {
+                status: response.status,
+                statusText: response.statusText,
+                headers: response.headers,
+            });
+        }
+
+        clearTimeout(timer);
         const location = response.headers.get('location');
         if (!location) return response;
         if (redirectCount === MAX_REDIRECTS) throw new Error('Too many redirects');

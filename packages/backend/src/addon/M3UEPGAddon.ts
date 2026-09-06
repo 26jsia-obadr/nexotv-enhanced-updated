@@ -782,10 +782,6 @@ export class M3UEPGAddon {
             this.m3uLastModified = null;
             this.iptvOrgEtag = null;
             this.xtreamEtag = null;
-            if (CACHE_ENABLED) {
-                sqliteCache.del('addon:channels:' + this.cacheKey);
-                sqliteCache.del('addon:epg:' + this.cacheKey);
-            }
             await this.updateData(true);
             this.firstCatalogRefreshDone = true;
             this.log.debug('Bootstrap catalog refresh completed', {
