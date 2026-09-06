@@ -2,13 +2,9 @@ services:
   - type: web
     name: nexotv-enhanced
     runtime: docker
-    plan: starter
+    plan: free
     dockerfilePath: ./Dockerfile
     healthCheckPath: /health
     envVars:
       - key: CONFIG_SECRET
         generateValue: true
-    disk:
-      name: nexotv-data
-      mountPath: /app/data
-      sizeGB: 1
