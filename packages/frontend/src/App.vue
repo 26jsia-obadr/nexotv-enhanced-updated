@@ -109,6 +109,8 @@
       </section>
     </main>
 
+    <footer class="build-footer">Build Version: {{ appVersion }}</footer>
+
     <TheOverlay
       :visible="poll.visible.value"
       :progress="poll.progress.value"
@@ -146,6 +148,8 @@ const poll = useManifestPoll()
 const { buildUrls } = useConfigToken(poll.appendDetail)
 const auth = useAuth()
 const { t } = useI18n()
+const injectedVersion = document.querySelector('meta[name="app-version"]')?.getAttribute('content')
+const appVersion = injectedVersion && injectedVersion !== '__APP_VERSION__' ? injectedVersion : 'v-dev'
 
 // Provide overlay control to all child components
 provide('overlayControl', {
@@ -236,6 +240,14 @@ watch(() => [auth.state.ready, auth.state.authenticated], () => {
 }
 
 .public-mode-notice strong { color: #7dd3fc; white-space: nowrap; }
+
+.build-footer {
+  padding: 0.75rem 1rem 1.25rem;
+  color: rgba(255, 255, 255, 0.42);
+  font-size: 0.72rem;
+  letter-spacing: 0.02em;
+  text-align: center;
+}
 
 @media (max-width: 640px) {
   .public-mode-notice { align-items: flex-start; flex-direction: column; }

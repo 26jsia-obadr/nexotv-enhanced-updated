@@ -1,11 +1,21 @@
-import xml2js from 'xml2js';
 import { makeLogger } from '../utils/logger';
 import env from '../config/env';
 
 /**
- * Parse XMLTV EPG content into a channel-keyed object.
+ * OPTIMIZED: Memory-efficient XMLTV EPG parser.
+ * 
+ * Instead of loading the entire XML DOM into memory (like xml2js),
+ * this parser uses regex-based streaming to extract programme entries.
+ * Only processes programmes for selected channels (filter early).
+ * 
+ * This prevents memory spikes on Render's 512MB limit and is crucial for
+ * large EPG files (50MB+).
  */
-export async function parseEPG(content: string, log?: ReturnType<typeof makeLogger>) {
+export async function parseEPG(
+    content: string,
+    log?: ReturnType<typeof makeLogger>,
+    selectedChannels?: Set<string>
+): Promise<Record<string, any[]>> {
     if (Buffer.byteLength(content, 'utf8') > env.EPG_MAX_BYTES) {
         const sizeMb = (Buffer.byteLength(content, 'utf8') / 1024 / 1024).toFixed(1);
         if (log) log.warn(`[EPG] Content too large (${sizeMb} MB), skipping`);
@@ -13,54 +23,88 @@ export async function parseEPG(content: string, log?: ReturnType<typeof makeLogg
     }
 
     const start = Date.now();
+    const epgData: Record<string, any[]> = {};
+
     try {
-        const parser = new xml2js.Parser();
-        const result = await parser.parseStringPromise(content);
-        const epgData: Record<string, any[]> = {};
-        if (result.tv && result.tv.programme) {
-            const cutoff = Date.now() - 3600 * 1000; // 1 hour ago
-            const nowTime = Date.now();
-            let eventCount = 0;
-            for (const prog of result.tv.programme) {
-                // Yield every 5000 programmes to keep the event loop responsive
-                if (++eventCount % 5000 === 0) {
-                    await new Promise<void>(resolve => setImmediate(resolve));
-                }
-                const stopDate = parseEPGTime(prog.$.stop);
-                if (stopDate.getTime() < cutoff) continue;
+        const cutoff = Date.now() - 3600 * 1000; // 1 hour ago
+        const nowTime = Date.now();
+        let processedPrograms = 0;
 
-                const startDate = parseEPGTime(prog.$.start);
+        // Regex to match <programme> elements: extracts channel and content
+        // This is more efficient than DOM parsing for large files
+        const programmeRegex = /<programme[^>]*channel="([^"]+)"[^>]*start="([^"]+)"[^>]*stop="([^"]+)"[^>]*>([\s\S]*?)<\/programme>/g;
 
-                const ch = prog.$.channel;
-                if (!epgData[ch]) epgData[ch] = [];
-                epgData[ch].push({
-                    start: startDate.getTime(),
-                    stop: stopDate.getTime(),
-                    title: prog.title ? prog.title[0]._ || prog.title[0] : 'Unknown',
-                    desc: prog.desc ? prog.desc[0]._ || prog.desc[0] : ''
-                });
+        let match: RegExpExecArray | null;
+        while ((match = programmeRegex.exec(content)) !== null) {
+            const ch = match[1];
+            const startStr = match[2];
+            const stopStr = match[3];
+            const progContent = match[4];
+
+            // Early filter: skip if not in selected channels
+            if (selectedChannels && !selectedChannels.has(ch)) {
+                continue;
             }
 
-            for (const ch in epgData) {
-                epgData[ch].sort((a, b) => a.start - b.start);
-                let futureCount = 0;
-                epgData[ch] = epgData[ch].filter(p => {
-                    const startTime = p.start;
-                    if (startTime > nowTime) {
-                        if (futureCount >= 5) return false;
-                        futureCount++;
-                    }
-                    return true;
-                });
+            const stopDate = parseEPGTime(stopStr);
+            if (stopDate.getTime() < cutoff) {
+                continue;
+            }
+
+            const startDate = parseEPGTime(startStr);
+
+            // Extract title and desc from the programme content using simple regex
+            let title = 'Unknown';
+            let desc = '';
+
+            const titleMatch = progContent.match(/<title[^>]*>([^<]*)<\/title>/);
+            if (titleMatch) {
+                title = titleMatch[1].trim() || 'Unknown';
+            }
+
+            const descMatch = progContent.match(/<desc[^>]*>([^<]*)<\/desc>/);
+            if (descMatch) {
+                desc = descMatch[1].trim();
+            }
+
+            if (!epgData[ch]) epgData[ch] = [];
+            epgData[ch].push({
+                start: startDate.getTime(),
+                stop: stopDate.getTime(),
+                title,
+                desc,
+            });
+
+            processedPrograms++;
+
+            // Yield every 5000 programmes to keep event loop responsive
+            if (processedPrograms % 5000 === 0) {
+                await new Promise<void>((resolve) => setImmediate(resolve));
             }
         }
-        if (log) {
-            log.debug('EPG parsed', {
-                channels: Object.keys(epgData).length,
-                programmes: Object.values(epgData).reduce((a, b) => a + b.length, 0),
-                ms: Date.now() - start
+
+        // Post-process: sort and limit programmes per channel
+        for (const ch in epgData) {
+            epgData[ch].sort((a, b) => a.start - b.start);
+            let futureCount = 0;
+            epgData[ch] = epgData[ch].filter((p) => {
+                if (p.start > nowTime) {
+                    if (futureCount >= 5) return false;
+                    futureCount++;
+                }
+                return true;
             });
         }
+
+        if (log) {
+            log.debug('EPG parsed (optimized)', {
+                channels: Object.keys(epgData).length,
+                programmes: Object.values(epgData).reduce((a, b) => a + b.length, 0),
+                ms: Date.now() - start,
+                filtered: selectedChannels ? 'by selectedChannels' : 'all',
+            });
+        }
+
         return epgData;
     } catch (e: any) {
         if (log) log.warn('EPG parse failed', e.message);

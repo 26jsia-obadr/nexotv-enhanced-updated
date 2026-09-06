@@ -408,7 +408,7 @@ export class M3UEPGAddon {
             return group ? { cats: new Set(group.categories), type: this.groupType(group.categories) } : null;
         }
         // single / legacy combined catalogs
-        if (id === 'iptv_channels' || id === 'iptv_org') {
+        if (id === 'iptv_channels' || id === 'iptv_org' || id === 'nexotv_live_all') {
             const tvCats = selected.filter(c => this.categoryType(c) === 'tv');
             return { cats: tvCats.length ? new Set(tvCats) : null, type: 'tv' };
         }
@@ -684,30 +684,29 @@ export class M3UEPGAddon {
 
     buildGenresInManifest() {
         if (!this.manifestRef) return;
-        // In split mode there is no combined catalog to attach genres to.
-        const tvCatalog = this.manifestRef.catalogs.find((c: any) => c.id === 'iptv_channels');
-        if (tvCatalog) {
+        
+        // REFACTORED FOR NUVIO: Single Live TV catalog with genres from selectedCategories.
+        // This ensures we only expose categories the user explicitly selected,
+        // preventing the addon from offering unselected categories as filter options.
+        const livetvCatalog = this.manifestRef.catalogs.find((c: any) => c.id === 'nexotv_live_all');
+        if (livetvCatalog) {
             const selected = this.selectedCategorySet();
-            const groups = [
-                ...new Set(
-                    this.channels
-                        // Only live-TV items feed the TV catalog's genre filter.
-                        .filter(c => mediaTypeOf(c) === 'tv')
-                        .map(c => c.category || c.attributes?.['group-title'])
-                        .filter(Boolean)
-                        .map((s: string) => s.trim())
-                        // When the user picked a subset, restrict genres to it.
-                        .filter((s: string) => selected.size === 0 || selected.has(s))
-                )
-            ].sort((a: any, b: any) => a.localeCompare(b));
-            if (!groups.includes('All Channels')) groups.unshift('All Channels');
-            const genreExtra = tvCatalog.extra.find((e: any) => e.name === 'genre');
+            
+            // Use ONLY the user's selectedCategories as genre options.
+            // If selectedCategories is empty, no genre filtering is available
+            // (all loaded categories will be served).
+            const genres = selected.size > 0
+                ? Array.from(selected).sort((a, b) => a.localeCompare(b))
+                : [];
+            
+            const genreExtra = livetvCatalog.extra.find((e: any) => e.name === 'genre');
             if (genreExtra) {
-                genreExtra.options = groups;
+                genreExtra.options = genres;
             }
         }
-        const genreExtra = tvCatalog?.extra?.find((e: any) => e.name === 'genre');
-        this.log.debug('Catalog genres built', { tvGenres: genreExtra?.options?.length || 0 });
+        
+        const genreExtra = livetvCatalog?.extra?.find((e: any) => e.name === 'genre');
+        this.log.debug('Catalog genres built (selected only)', { tvGenres: genreExtra?.options?.length || 0 });
     }
 
     async updateData(force = false) {
@@ -745,6 +744,53 @@ export class M3UEPGAddon {
         } catch (e: any) {
             this.log.error('[UPDATE] Failed:', e.message);
             throw e;
+        }
+    }
+
+    /**
+     * OPTIMIZATION: Start a background refresh job that silently updates the cache
+     * from the provider at regular intervals. This ensures Render doesn't serve stale
+     * data between user requests.
+     * 
+     * The refresh runs in the background and does NOT block user requests. If a refresh
+     * fails, it logs a warning but continues operating with cached data.
+     */
+    startBackgroundRefresh() {
+        if (this._updateTimer) return; // Already running
+        if (!CACHE_ENABLED) return; // No point without cache
+        if (this.updateInterval <= 0) return; // Disabled
+        
+        this.log.debug('Background refresh scheduler started', { 
+            intervalMs: this.updateInterval,
+            intervalHours: (this.updateInterval / 3600_000).toFixed(1)
+        });
+        
+        // Schedule the first refresh after the update interval
+        this._updateTimer = setInterval(async () => {
+            try {
+                // Silently update in the background — never throw
+                await this.updateData(false).catch((e: any) => {
+                    this.log.error('[BACKGROUND REFRESH] Failed (will retry next cycle)', e.message);
+                });
+            } catch {
+                // Double-catch to prevent any error from breaking the timer
+            }
+        }, this.updateInterval);
+        
+        // Unref the timer so it doesn't keep the process alive
+        if (this._updateTimer.unref) {
+            this._updateTimer.unref();
+        }
+    }
+
+    /**
+     * Stop the background refresh job (used for cleanup).
+     */
+    stopBackgroundRefresh() {
+        if (this._updateTimer) {
+            clearInterval(this._updateTimer);
+            this._updateTimer = null;
+            this.log.debug('Background refresh scheduler stopped');
         }
     }
 

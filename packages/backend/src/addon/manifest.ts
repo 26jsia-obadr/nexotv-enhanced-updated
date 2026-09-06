@@ -1,4 +1,5 @@
 import env from '../config/env';
+import { APP_VERSION, PACKAGE_VERSION } from '../utils/version';
 
 export type CatalogMode = 'single' | 'split' | 'custom';
 export type MediaType = 'tv' | 'movie' | 'series';
@@ -86,71 +87,34 @@ function catalogExtra(categories: string[], home: boolean) {
 }
 
 function buildCatalogs(opts: ManifestOptions) {
-    const mode: CatalogMode =
-        opts.catalogMode === 'split' ? 'split'
-            : opts.catalogMode === 'custom' ? 'custom'
-                : 'single';
-    const categories = cleanCategories(opts.selectedCategories);
-    const types = opts.categoryTypes;
+    // REFACTORED FOR NUVIO: Always use a SINGLE Live TV catalog with genre-based filtering.
+    // This prevents multiple network requests and optimizes for rate-limiting constraints.
+    
+    const selectedCategories = cleanCategories(opts.selectedCategories);
     const baseName = opts.catalogName || env.ADDON_NAME;
-    const discoverOnly = new Set(opts.discoverOnly || []);
-    const isHome = (key: string) => !discoverOnly.has(key);
-
-    // Custom mode: one catalog per user-defined group of categories.
-    if (mode === 'custom') {
-        const groups = (opts.catalogGroups || [])
-            .map(g => ({ name: (g?.name || '').trim(), categories: cleanCategories(g?.categories) }))
-            .filter(g => g.name && g.categories.length > 0);
-        if (groups.length > 0) {
-            return groups.map((g, i) => ({
-                type: dominantType(g.categories, types),
-                id: groupCatalogIdForIndex(i),
-                name: opts.catalogName ? `${opts.catalogName} · ${g.name}` : g.name,
-                ...catalogExtra(g.categories, isHome('grp:' + i))
-            }));
-        }
-        // No valid group → fall through to a single combined catalog.
-    }
-
-    // Split mode: one catalog per selected category (typed individually).
-    if (mode === 'split' && categories.length > 0) {
-        return categories.map((cat, i) => ({
-            type: typeOf(cat, types),
-            id: catalogIdForIndex(i),
-            name: opts.catalogName ? `${opts.catalogName} · ${cat}` : cat,
-            ...catalogExtra([cat], isHome('cat:' + cat))
-        }));
-    }
-
-    // Single mode: one combined catalog per media type present in the selection.
-    const tvCats = categories.filter(c => typeOf(c, types) === 'tv');
-    const movieCats = categories.filter(c => typeOf(c, types) === 'movie');
-    const seriesCats = categories.filter(c => typeOf(c, types) === 'series');
-    const catalogs: any[] = [];
-
-    // One combined catalog per media type. The genre extra is always present
-    // (runtime-filled for TV); `isRequired` is what keeps a catalog off the home
-    // board when the user marked it as Discover-only.
-    const singleCatalog = (type: MediaType, id: string, name: string, cats: string[]) => {
-        const home = isHome('type:' + type);
-        const genres = cats.length ? ['All Channels', ...cats] : (home ? [] : ['All Channels']);
-        catalogs.push({
-            type, id, name,
-            extra: [
-                { name: 'genre', isRequired: !home, options: genres },
-                { name: 'search', isRequired: false },
-                { name: 'skip' }
-            ],
-        });
-    };
-
-    // TV: present when TV categories are selected, or as the default when nothing
-    // is selected at all. Skipped when only Movie/Series were picked.
-    if (tvCats.length > 0 || categories.length === 0) {
-        singleCatalog('tv', SINGLE_CATALOG_ID, baseName, tvCats);
-    }
-    if (movieCats.length > 0) singleCatalog('movie', 'iptv_movies', `${baseName} · Movies`, movieCats);
-    if (seriesCats.length > 0) singleCatalog('series', 'iptv_series', `${baseName} · Series`, seriesCats);
+    
+    // Build genre options from user's selected categories (not from runtime-loaded channels).
+    // If no categories are selected, use empty array (the route will serve all categories from cache).
+    const genreOptions = selectedCategories.length > 0
+        ? selectedCategories
+        : [];
+    
+    // Create a SINGLE Live TV catalog with selected categories as genre filter options.
+    const catalogs = [{
+        type: 'tv' as MediaType,
+        id: 'nexotv_live_all',
+        name: baseName,
+        extra: [
+            {
+                name: 'genre',
+                isRequired: false,
+                options: genreOptions.length > 0 ? genreOptions : undefined
+            },
+            { name: 'search', isRequired: false },
+            { name: 'skip' }
+        ].filter(e => !(e.name === 'genre' && !e.options))  // Remove genre extra if no options
+    }];
+    
     return catalogs;
 }
 
@@ -176,9 +140,9 @@ export function createManifest(idPrefix?: string, options?: ManifestOptions) {
     const types = [...new Set<string>(['tv', ...catalogs.map((c: any) => c.type)])];
     return fitManifestToSdkLimit({
         id: 'community.nexotv.enhanced',
-        version: '2.0.0',
+        version: PACKAGE_VERSION,
         name: env.ADDON_NAME,
-        description: env.ADDON_DESCRIPTION,
+        description: `${env.ADDON_DESCRIPTION} (${APP_VERSION})`,
         resources: ['catalog', 'stream', 'meta'],
         types,
         catalogs,

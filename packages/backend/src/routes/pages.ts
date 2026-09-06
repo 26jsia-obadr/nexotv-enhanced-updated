@@ -2,6 +2,7 @@ import { Router } from 'express';
 import path from 'path';
 import fs from 'fs';
 import { createManifest } from '../addon/manifest';
+import { APP_VERSION } from '../utils/version';
 
 const router = Router();
 
@@ -12,7 +13,15 @@ const indexHtml = path.join(frontendDist, 'index.html');
 
 function sendIndex(res: any, reqPath = '/') {
     if (fs.existsSync(indexHtml)) {
-        res.sendFile(indexHtml);
+        const html = fs.readFileSync(indexHtml, 'utf8')
+            .replace('__APP_VERSION__', APP_VERSION.replace(/[&<>'"]/g, character => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                "'": '&#39;',
+                '"': '&quot;'
+            }[character] || character)));
+        res.type('html').send(html);
     } else if (process.env.NODE_ENV !== 'production') {
         // In dev mode the Vite dev server runs on port 5173.
         // Redirect there so `localhost:7000/configure` works out of the box.

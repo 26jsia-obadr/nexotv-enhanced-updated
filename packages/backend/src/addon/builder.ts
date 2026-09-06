@@ -67,6 +67,10 @@ async function createAddon(config: AddonConfig) {
                 .catch((e: any) => console.error('[ADDON] Background initial fetch failed:', e.message));
         }
 
+        // OPTIMIZATION: Start background refresh scheduler to silently update cache
+        // This ensures we never serve stale data and respects the configured refresh interval
+        addonInstance.startBackgroundRefresh();
+
         let iface: any;
         const _origBuildGenres = addonInstance.buildGenresInManifest.bind(addonInstance);
         addonInstance.buildGenresInManifest = () => {

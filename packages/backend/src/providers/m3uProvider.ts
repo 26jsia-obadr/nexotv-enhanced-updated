@@ -109,7 +109,13 @@ export async function fetchData(addonInstance: any) {
                             addonInstance.log?.warn(`[EPG] Content-Length too large (${sizeMb} MB), skipping download`);
                         } else {
                             const epgContent = await epgResp.text();
-                            addonInstance.epgData = await parseEPG(epgContent, addonInstance.log);
+                            // OPTIMIZATION: Only parse EPG for channels we actually loaded
+                            const loadedChannelIds = new Set(
+                                addonInstance.channels
+                                    .map((c: any) => c.attributes?.['tvg-id'] || c.id)
+                                    .filter(Boolean) as string[]
+                            );
+                            addonInstance.epgData = await parseEPG(epgContent, addonInstance.log, loadedChannelIds);
                             addonInstance.lastEpgUpdate = Date.now();
                         }
                     }

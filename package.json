@@ -5,6 +5,8 @@
     "dev": "concurrently \"pnpm --filter backend dev\" \"pnpm --filter frontend dev\"",
     "build": "pnpm --filter frontend build && pnpm --filter backend build",
     "test": "pnpm --filter backend test",
+    "typecheck": "pnpm --filter frontend typecheck && pnpm --filter backend typecheck",
+    "check": "pnpm typecheck && pnpm test",
     "start": "pnpm --filter backend start"
   },
   "devDependencies": {

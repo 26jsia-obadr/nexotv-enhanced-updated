@@ -253,6 +253,7 @@ as a secret environment variable. `WEBUI_PASSWORD` is optional. For a public ins
 ```bash
 pnpm install
 pnpm dev        # backend (port 7000) + frontend (Vite) in parallel
+pnpm check      # typecheck both packages and run backend tests
 ```
 
 Tests and checks:
