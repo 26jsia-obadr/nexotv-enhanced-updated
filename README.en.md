@@ -19,7 +19,7 @@
 
 > Overview, install guide and screenshots: **[upandclear.org — NexoTV Enhanced](https://upandclear.org/2026/06/24/nexotv-enhanced/)**
 
-> **Very easy installation (French): [step-by-step guide](INSTALLATION-FACILE.md).**
+> **Easy installation: [step-by-step guide](INSTALLATION-FACILE.md).**
 
 ---
 
@@ -278,29 +278,36 @@ The catalog **structure** (which catalogs, their types) is fixed by the token: i
 
 ---
 
-## Deployment (Docker)
+## Deployment on Render (Web Service)
 
-Multi-arch image (amd64/arm64) published on GHCR: `ghcr.io/aerya/nexotv-enhanced:latest`.
+Render automatically pulls this repository, builds the root `Dockerfile`, and starts the web
+service. Do not add `git clone` or `docker pull` to the start command.
 
-For a first install or a public-instance upgrade, use the **[easy installation guide](INSTALLATION-FACILE.md)**.
+1. Open the Render dashboard and select **New +** then **Web Service**.
+2. Click **Connect a repository** and select:
+   `https://github.com/26jsia-obadr/nexotv-enhanced-updated`.
+3. Select the `main` branch.
+4. Set **Language** to `Docker` and keep **Dockerfile Path** as `./Dockerfile`.
+5. In **Docker Command**, enter exactly:
 
-```yaml
-# docker-compose.yml
-services:
-  nexotv:
-    image: ghcr.io/aerya/nexotv-enhanced:latest
-    container_name: nexotv-enhanced
-    ports:
-      - "7000:7000"
-    env_file:
-      - .env
-    environment:
-      CONFIG_SECRET: ${CONFIG_SECRET:?Set CONFIG_SECRET in the .env file}
-    volumes:
-      - ./data:/app/data     # persistence (cache + manifest references + saved configs)
-      - ./config:/app/config
-    restart: unless-stopped
+```bash
+node packages/backend/dist/server.js
 ```
+
+6. Add this environment variable:
+
+```text
+CONFIG_SECRET=<random-secret-at-least-16-characters-long>
+```
+
+Do not set `PORT` manually. Render injects it automatically and the application uses it. The health
+check endpoint is `/health`.
+
+7. To preserve SQLite cache and saved configurations after redeploys, add a Render persistent
+   disk with `/app/data` as its **Mount Path**.
+8. Click **Create Web Service**. Once deployed, open the Render URL and go to `/configure`.
+
+`WEBUI_PASSWORD` is optional. For a public instance, keep `ALLOW_LOCAL_URLS=false`.
 
 ### Key environment variables
 
@@ -321,7 +328,7 @@ services:
 Remote URLs are resolved and checked at every redirect hop. Private IPv4 and IPv6 addresses are
 blocked by default; set `ALLOW_LOCAL_URLS=true` only on a local, unexposed instance.
 
-> See [`.env.example`](.env.example) and the [upstream README](README.upstream.md) for the full list.
+> See [`.env.example`](.env.example) for the full list of environment variables.
 
 ---
 

@@ -1,18 +1,18 @@
-# Installation facile de NexoTV Enhanced
+# Easy installation of NexoTV Enhanced
 
-Ce guide est fait pour une instance publique où chacun configure sa propre liste sans voir celles
-des autres. Il suffit de copier-coller les blocs dans l'ordre.
+This guide is for a public instance where everyone configures their own playlist
+without seeing anyone else's. Copy and paste the blocks in order.
 
-## 1. Créer le dossier
+## 1. Create the directory
 
 ```bash
 mkdir -p nexotv-enhanced/data nexotv-enhanced/config
 cd nexotv-enhanced
 ```
 
-## 2. Créer `docker-compose.yml`
+## 2. Create `docker-compose.yml`
 
-Créer un fichier nommé `docker-compose.yml` avec exactement ceci :
+Create a file named `docker-compose.yml` with exactly this content:
 
 ```yaml
 services:
@@ -24,71 +24,71 @@ services:
     env_file:
       - .env
     environment:
-      CONFIG_SECRET: ${CONFIG_SECRET:?Définir CONFIG_SECRET dans le fichier .env}
+      CONFIG_SECRET: ${CONFIG_SECRET:?Set CONFIG_SECRET in the .env file}
     volumes:
-      - ./data:/app/data      # indispensable pour conserver les URL manifest
+      - ./data:/app/data      # required to preserve manifest URLs
       - ./config:/app/config
     restart: unless-stopped
 ```
 
-## 3. Générer le secret
+## 3. Generate the secret
 
-Sur Linux, un NAS ou un serveur en SSH :
+On Linux, a NAS, or an SSH server:
 
 ```bash
 openssl rand -hex 32
 ```
 
-Sous Windows PowerShell :
+On Windows PowerShell:
 
 ```powershell
 $b = New-Object byte[] 32; [Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($b); ($b | ForEach-Object ToString x2) -join ''
 ```
 
-La commande affiche une longue suite de caractères. La copier sans espace.
+The command prints a long string of characters. Copy it without spaces.
 
-## 4. Créer `.env`
+## 4. Create `.env`
 
-Créer un fichier nommé `.env` dans le même dossier :
-
-```env
-CONFIG_SECRET=COLLER_ICI_LA_LONGUE_VALEUR_GENEREE
-```
-
-Ne pas ajouter `WEBUI_PASSWORD` pour une instance publique. C'est normal que la page de
-configuration ne demande aucun mot de passe : les visiteurs ne peuvent plus voir de sauvegardes ou
-de statistiques communes.
-
-Pour une instance strictement privée, ajouter une deuxième ligne :
+Create a file named `.env` in the same directory:
 
 ```env
-WEBUI_PASSWORD=CHOISIR_UN_VRAI_MOT_DE_PASSE
+CONFIG_SECRET=PASTE_THE_LONG_GENERATED_VALUE_HERE
 ```
 
-Toutes les personnes connaissant ce mot de passe partageront alors les mêmes sauvegardes.
+Do not add `WEBUI_PASSWORD` for a public instance. It is normal for the
+configuration page not to ask for a password: visitors cannot see shared saved
+configurations or statistics.
 
-Le dossier `data/` contient aussi les configurations chiffrées associées aux URL manifest courtes.
-Ne pas le supprimer et l'inclure dans les sauvegardes du serveur.
+For a strictly private instance, add a second line:
 
-## 5. Démarrer
+```env
+WEBUI_PASSWORD=CHOOSE_A_REAL_PASSWORD
+```
+
+Everyone who knows this password will share the same saved configurations.
+
+The `data/` directory also contains the encrypted configurations associated with
+short manifest URLs. Do not delete it, and include it in server backups.
+
+## 5. Start the instance
 
 ```bash
 docker compose pull
 docker compose up -d
 ```
 
-Ouvrir ensuite `http://ADRESSE-DU-SERVEUR:7000/configure` ou le domaine HTTPS configuré devant le
-conteneur.
+Then open `http://SERVER-ADDRESS:7000/configure`, or the HTTPS domain configured
+in front of the container.
 
-## 6. Vérifier la sécurité
+## 6. Verify security
 
-Remplacer `https://nexotv.exemple.fr` par le vrai domaine :
+Replace `https://nexotv.example.com` with the real domain:
 
 ```bash
-curl https://nexotv.exemple.fr/api/capabilities
+  curl https://nexotv.example.com/api/capabilities
 ```
 
-Le résultat doit contenir :
+The result must contain:
 
 ```json
 {"encryptionEnabled":true}
@@ -97,29 +97,29 @@ Le résultat doit contenir :
 Puis lancer :
 
 ```bash
-curl -i https://nexotv.exemple.fr/api/configs
+  curl -i https://nexotv.example.com/api/configs
 ```
 
-Sur une instance publique, le résultat doit commencer par `HTTP/2 403` ou `HTTP/1.1 403`. Si ce
-n'est pas le cas, ne pas communiquer l'adresse de l'instance.
+On a public instance, the result must start with `HTTP/2 403` or `HTTP/1.1 403`.
+If it does not, do not share the instance address.
 
-## Mise à jour d'une ancienne instance publique
+## Updating an existing public instance
 
-Si des utilisateurs ont déjà vu les configurations des autres, il faut considérer les identifiants
-enregistrés comme exposés : changer les mots de passe Xtream, liens M3U privés et MAC Stalker auprès
-des fournisseurs concernés.
+If users have already seen each other's configurations, consider the stored
+credentials exposed: change the Xtream passwords, private M3U links, and Stalker
+MAC addresses with the relevant providers.
 
-Mettre ensuite l'image à jour :
+Then update the image:
 
 ```bash
 docker compose pull
 docker compose up -d
 ```
 
-Pour effacer définitivement les anciennes sauvegardes et l'historique de l'instance, arrêter le
-conteneur puis supprimer la base. **Cette commande efface aussi le cache et toutes les configurations
-associées aux URL manifest courtes. Les addons déjà installés devront être reconfigurés. Cette
-opération ne peut pas être annulée.**
+To permanently delete the instance's old saved configurations and history, stop
+the container and remove the database. **This command also deletes the cache and
+all configurations associated with short manifest URLs. Already-installed addons
+must be configured again. This operation cannot be undone.**
 
 ```bash
 docker compose down
@@ -127,4 +127,4 @@ rm -f data/cache.sqlite data/cache.sqlite-shm data/cache.sqlite-wal
 docker compose up -d
 ```
 
-Refaire enfin les deux vérifications de la section précédente.
+Finally, repeat both checks from the previous section.

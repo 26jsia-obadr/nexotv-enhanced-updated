@@ -125,7 +125,7 @@
           </div>
         </div>
 
-        <button type="button" class="btn ghost add-group" @click="addGroup">+ {{ t('Add catalog', 'Ajouter un catalogue') }}</button>
+        <button type="button" class="btn ghost add-group" @click="addGroup">+ {{ t('Add catalog', 'Add catalog') }}</button>
 
         <small v-if="groups.length === 0" class="hint">
           {{ t('Add at least one catalog and assign it some categories.', 'Ajoutez au moins un catalogue et affectez-lui des catégories.') }}

@@ -1,4 +1,4 @@
-name: Sécurité - Trivy
+name: Security - Trivy
 
 on:
   pull_request:
@@ -21,7 +21,7 @@ env:
 
 jobs:
   filesystem:
-    name: Nouvelles régressions HIGH/CRITICAL
+    name: New HIGH/CRITICAL regressions
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -29,7 +29,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Analyser la révision courante
+      - name: Scan current revision
         run: |
           docker run --rm -v "$PWD:/work" "$TRIVY_IMAGE" fs \
             --scanners vuln,secret,misconfig --severity HIGH,CRITICAL \
@@ -38,7 +38,7 @@ jobs:
             --scanners vuln,secret,misconfig --severity HIGH,CRITICAL \
             --ignore-unfixed --format sarif --output /work/trivy-head.sarif /work || true
 
-      - name: Analyser la base de la PR
+      - name: Scan the PR base
         if: github.event_name == 'pull_request'
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
@@ -50,11 +50,11 @@ jobs:
           cp /tmp/trivy-base/trivy-base.json trivy-base.json
           git worktree remove /tmp/trivy-base --force
 
-      - name: Refuser uniquement les nouvelles régressions corrigibles
+      - name: Fail only on new fixable regressions
         if: github.event_name == 'pull_request'
         run: python3 .github/scripts/trivy_compare.py trivy-base.json trivy-head.json
 
-      - name: Publier le rapport SARIF
+      - name: Upload SARIF report
         if: always() && hashFiles('trivy-head.sarif') != ''
         continue-on-error: true
         uses: github/codeql-action/upload-sarif@v3.37.9
@@ -62,7 +62,7 @@ jobs:
           sarif_file: trivy-head.sarif
           category: trivy-filesystem
 
-      - name: Conserver le rapport JSON
+      - name: Upload JSON report
         if: always() && hashFiles('trivy-head.json') != ''
         uses: actions/upload-artifact@v4
         with:

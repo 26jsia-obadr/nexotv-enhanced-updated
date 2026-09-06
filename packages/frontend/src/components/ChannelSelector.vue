@@ -4,7 +4,7 @@
     <p class="hint">
       {{ t(
         'Load the channels, then uncheck the ones you want to hide. Hidden channels are removed from catalogs and playback routes.',
-        'Charge les chaînes, puis décoche celles que tu veux masquer. Les chaînes masquées sont retirées des catalogues et des routes de lecture.'
+        'Load channels, then uncheck the ones you want to hide. Hidden channels are removed from catalogs and playback routes.'
       ) }}
     </p>
 
@@ -56,7 +56,7 @@
       <p v-if="filteredChannels.length > DISPLAY_LIMIT" class="hint">
         {{ t(
           `Showing the first ${DISPLAY_LIMIT} results. Refine the search to find another channel.`,
-          `Affichage des ${DISPLAY_LIMIT} premiers résultats. Affine la recherche pour trouver une autre chaîne.`
+          `Showing the first ${DISPLAY_LIMIT} results. Refine your search to find another channel.`
         ) }}
       </p>
     </template>
@@ -144,7 +144,7 @@ async function loadChannels() {
     })
     if (response.status === 401) {
       auth.markUnauthenticated()
-      throw new Error(t('Session expired — sign in again.', 'Session expirée — reconnecte-toi.'))
+      throw new Error(t('Session expired — sign in again.', 'Session expired — sign in again.'))
     }
     const payload = await response.json().catch(() => ({}))
     if (!response.ok || !Array.isArray(payload.channels)) {

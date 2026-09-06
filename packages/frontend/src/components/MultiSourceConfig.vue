@@ -69,7 +69,7 @@
       </div>
     </fieldset>
 
-    <button type="button" class="btn ghost add-src" @click="addSource">+ {{ t('Add a source', 'Ajouter une source') }}</button>
+    <button type="button" class="btn ghost add-src" @click="addSource">+ {{ t('Add a source', 'Add a source') }}</button>
 
     <fieldset v-if="mergedCategories.length">
       <legend>{{ t('Catalogs', 'Catalogues') }}</legend>
@@ -215,7 +215,7 @@ async function prefetch(url: string): Promise<string> {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ url, purpose: 'multi' }),
   })
-  if (r.status === 401) { useAuth().markUnauthenticated(); throw new Error('Session expirée — reconnecte-toi.') }
+  if (r.status === 401) { useAuth().markUnauthenticated(); throw new Error('Session expired — please sign in again.') }
   const p = await r.json().catch(() => ({}))
   if (!r.ok || !p.ok || !p.content) throw new Error(p.error || `HTTP ${r.status}`)
   return p.content
@@ -282,7 +282,7 @@ async function loadStalker(s: SourceState): Promise<Entry[]> {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ url: s.stalkerUrl.trim(), mac: s.stalkerMac.trim() }),
   })
-  if (r.status === 401) { useAuth().markUnauthenticated(); throw new Error(t('Session expired — sign in again.', 'Session expirée — reconnecte-toi.')) }
+  if (r.status === 401) { useAuth().markUnauthenticated(); throw new Error(t('Session expired — sign in again.', 'Session expired — sign in again.')) }
   const p = await r.json().catch(() => ({}))
   if (!r.ok || !Array.isArray(p.categories)) throw new Error(p.error || `HTTP ${r.status}`)
   return p.categories
@@ -301,7 +301,7 @@ async function loadSource(s: SourceState) {
         : await loadStalker(s)
     if (!entries.length) throw new Error(t('No category found.', 'Aucune catégorie trouvée.'))
     s.categories = entries; s.loaded = true
-    oc.appendDetail(`✔ ${entries.length} catégories`); oc.setProgress(100, 'OK'); oc.hideOverlay()
+    oc.appendDetail(`✔ ${entries.length} categories`); oc.setProgress(100, 'OK'); oc.hideOverlay()
   } catch (e: any) { s.error = e.message || String(e); oc.appendDetail('✖ ' + s.error); oc.markError() }
   finally { s.loading = false }
 }

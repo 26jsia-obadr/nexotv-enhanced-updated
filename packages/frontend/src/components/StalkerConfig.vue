@@ -110,7 +110,7 @@ async function loadCategories() {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ url: form.stalkerUrl.trim(), mac: form.stalkerMac.trim() }),
     })
-    if (r.status === 401) { useAuth().markUnauthenticated(); throw new Error(t('Session expired — sign in again.', 'Session expirée — reconnecte-toi.')) }
+    if (r.status === 401) { useAuth().markUnauthenticated(); throw new Error(t('Session expired — sign in again.', 'Session expired — sign in again.')) }
     const p = await r.json().catch(() => ({}))
     if (!r.ok || !Array.isArray(p.categories) || !p.categories.length) throw new Error(p.error || t('No category found.', 'Aucune catégorie trouvée.'))
     categories.value = p.categories

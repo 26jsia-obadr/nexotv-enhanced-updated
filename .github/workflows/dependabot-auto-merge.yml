@@ -17,13 +17,13 @@ jobs:
       github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     steps:
-      - name: Lire les métadonnées Dependabot
+      - name: Read Dependabot metadata
         id: metadata
         uses: dependabot/fetch-metadata@v2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Activer la fusion squash pour les mises à jour patch et mineures
+      - name: Enable squash merging for patch and minor updates
         if: >-
           steps.metadata.outputs.update-type == 'version-update:semver-patch' ||
           steps.metadata.outputs.update-type == 'version-update:semver-minor' ||
@@ -33,5 +33,5 @@ jobs:
           PR_URL: ${{ github.event.pull_request.html_url }}
         run: |
           if ! gh pr merge --auto --squash --delete-branch "$PR_URL"; then
-            echo "::notice::L'auto-merge natif est indisponible; la fusion sera réévaluée à la fin des contrôles."
+            echo "::notice::Native auto-merge is unavailable; merging will be reconsidered after checks."
           fi

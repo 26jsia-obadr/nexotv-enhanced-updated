@@ -17,7 +17,7 @@
 
 > Overview, install guide and screenshots: **[upandclear.org — NexoTV Enhanced](https://upandclear.org/2026/06/24/nexotv-enhanced/)**
 
-> **Very easy installation (French): [step-by-step guide](INSTALLATION-FACILE.md).**
+> **Easy installation: [step-by-step guide](INSTALLATION-FACILE.md).**
 
 ---
 
@@ -40,101 +40,34 @@ features on top of the upstream code.
 
 | Area | Addition |
 |---|---|
-| **Live TV channels** | The core: streams your **live TV channels** (Xtream, M3U/M3U+, IPTV-org, Stalker) in Stremio, with EPG, logos and search. *(upstream foundation, preserved.)* |
-| **Multi-source** | Add **several** Xtream/M3U/Stalker sources mixed into the same catalogs, with **Movies/Series de-duplication** and per-source stream choice. |
-| **Categories** | The webui loads the feed's categories, **labels them by type** (TV / Movies / Series) and lets you **pick** which ones to keep (filter, all / none / invert). |
-| **Hidden channels** | Hide individual live TV channels, with search, category filtering and bulk actions. They are removed from catalogs and playback routes. |
-| **Catalogs** | 3 layouts: a single catalog, one per category, or **custom catalogs** (named groups of categories). |
-| **Home / Discover** | Choose, per catalog, which ones show on the **home** board; the others stay accessible via **Discover**. |
-| **Movies & Series (Xtream)** | Movies/Series categories become **real playable Stremio catalogs** (`movie` / `series`, series with **seasons + episodes**). |
-| **M3U** | `/movie/` entries are exposed as `movie` catalogs (direct playback). |
-| **Stalker** | **Stalker / Ministra** portal (MAC auth) as a **live TV + movies (VOD) + series** source (single **and** multi-source); movies/series TMDB-enriched and de-duplicated, streams resolved on play via `create_link`. |
-| **Search** | Accent/separator-insensitive matching (`tf 1` ≈ `TF1`, `asterix` ≈ `Astérix`). |
-| **Authentication** | Optional **single password** on the webui. |
-| **Saved configs** | **Server-side saved configurations** (named, reloadable). |
-| **Synopsis** | Movies & series with **synopsis** (genres, cast, director, year) fetched when opening the detail page. |
-| **TMDB enrichment** | TMDB key (entered in the webui) → posters/synopsis/cast **via TMDB** for Movies & Series, with **fallback to provider data** when a title isn't found. |
-| **Statistics** | **Statistics** panel: viewing log (time, title, IP, source/MAC, "active") and the number of **TV / Movies / Series groups** per config. |
-| **Language** | **EN / FR** switch in the header (remembered in the browser). |
-| **Display** | Channel logos as square posters; addon name `NexoTV-Enhanced`. |
+| **Live TV** | Xtream, M3U, IPTV-org and Stalker live channels in Stremio. |
+| **Movies and Series** | Playable catalogs with metadata and on-demand episodes. |
+| **Multi-source** | Multiple sources with de-duplication and stream selection. |
+| **Security** | Encrypted configuration tokens, optional web UI password and SSRF protection. |
+| **Catalogs** | Single, split and custom catalog layouts with home/discover selection. |
 
-> Fully **backward-compatible**: with no category selection, behaviour matches the original addon
-> (all channels, one catalog).
+The addon remains backward-compatible when no category selection is configured.
 
 ## Public mode or private mode
 
-NexoTV Enhanced deliberately supports two distinct deployment modes:
-
-| Mode | `.env` file | Behaviour |
-|---|---|---|
-| **Public / community** | `CONFIG_SECRET` only | Everyone creates their own short, opaque URL. Server-side saved configs, statistics and credential-bearing token restore are disabled. |
-| **Private / household** | `CONFIG_SECRET` + `WEBUI_PASSWORD` | The web UI requires the shared password. Everyone who knows it shares the instance's saved configs and statistics. |
-
-`CONFIG_SECRET` encrypts personal tokens; it does not create accounts. `WEBUI_PASSWORD` opens one
-shared private space; it does not create separate users. Personal addon URLs must always stay private.
-
-The encrypted configuration behind each short URL is stored in `data/cache.sqlite`. Keep and back up
-the `data/` volume: deleting this database invalidates existing short URLs. Legacy URLs containing a
-full self-contained token remain compatible.
+Use `CONFIG_SECRET` for public deployments. Add `WEBUI_PASSWORD` to protect the web UI and enable
+shared saved configurations and statistics. Keep the persistent `data/` directory because it stores
+the SQLite database used by short manifest URLs.
 
 ---
 
 ## Screenshots
 
-### Configuration (webui)
-
-| | |
-|---|---|
-| ![Xtream API tab](screenshots/1.png) | ![Category selection](screenshots/2.png) |
-| **Xtream API** tab: credentials, then *Load categories*. | Layout + **type filter** (TV / Movies / Series). |
-| ![Custom catalogs — TV](screenshots/3.png) | ![Custom catalogs — Movies](screenshots/4.png) |
-| **Custom catalogs** mode: a "TV King" catalog. | Two catalogs "TV King" and "Films King". |
-| ![Install — EPG](screenshots/5.png) | ![Install — Ready](screenshots/6.png) |
-| Install overlay (Xtream pre-flight, EPG). | Manifest ready → *Open in Stremio* / *Copy URL*. |
-
-![Multi-source tab](screenshots/13.png)
-
-*The **Multi-source** tab: two sources (King365 + Pierot), custom catalogs and playback choice (offer the choice / play the first available).*
-
-### Stremio
-
-| | |
-|---|---|
-| ![Addon installed](screenshots/7.png) | ![Stremio home](screenshots/8.png) |
-| **NexoTV Enhanced** addon installed. | Catalogs TV King / Films King / Séries King. |
-| ![Movie detail + synopsis](screenshots/9.png) | ![Multi-source: stream choice](screenshots/14.png) |
-| Movie detail with **synopsis**, rating and genres. | One movie, **two streams** (King365 / Prime+) — multi-source. |
-
-### Nuvio
-
-| | | |
-|---|---|---|
-| ![Nuvio home](screenshots/10.png) | ![Nuvio movie detail](screenshots/11.png) | ![Nuvio playback](screenshots/12.png) |
-| Home: TV King / Films King / Séries King. | Movie detail: *Play*, cast. | Playback (source NexoTV Enhanced). |
+![Configuration](screenshots/1.png)
 
 ---
 
 ## Features in detail
 
-### Categories & catalogs
+### Categories and catalogs
 
-1. Configuration page (`/configure`) → **Xtream API** or **M3U / M3U+** tab → enter the
-   credentials / playlist URL.
-2. **Categories** section → **Load categories**: the list shows, for each category, a
-   **TV / Movie / Series** badge and the channel count.
-   - Xtream: types read from `get_live/vod/series_categories`.
-   - M3U: types inferred from the URL path (`/live/` `/movie/` `/series/`).
-3. Check the categories you want, then choose the **layout**:
-   - **Single** — all categories in one catalog (categories remain an internal genre filter);
-   - **Split** — one catalog per category;
-   - **Custom** — named catalogs, each grouping the categories of your choice; the **type filter
-     (TV / Movies / Series) is per-catalog** while selecting.
-4. **On the home screen** section: tick the catalogs to show on the Stremio **home** board; unticked
-   ones stay accessible via **Discover** only (technically: a required genre → off the board but
-   present in Discover).
-5. **Install Addon**: the configuration is compressed, encrypted, then stored in SQLite. The manifest
-   URL contains only a 36-character opaque reference, so adding many providers or categories no
-   longer makes the URL grow.
+Open `/configure`, enter a provider, load and select categories, choose a catalog layout, then install
+the addon in Stremio.
 
 ### Hide individual channels
 
@@ -276,82 +209,35 @@ The catalog **structure** (which catalogs, their types) is fixed by the token: i
 
 ---
 
-## Deployment (Docker)
+## Deployment on Render (Web Service)
 
-Multi-arch image (amd64/arm64) published on GHCR: `ghcr.io/aerya/nexotv-enhanced:latest`.
+Render automatically pulls this repository, builds the root `Dockerfile`, and starts the web
+service. Do not add `git clone` or `docker pull` to the start command.
 
-For a first install or a public-instance upgrade, use the **[easy installation guide](INSTALLATION-FACILE.md)**.
+1. Open the Render dashboard and select **New +** then **Web Service**.
+2. Click **Connect a repository** and select:
+   `https://github.com/26jsia-obadr/nexotv-enhanced-updated`.
+3. Select the `main` branch.
+4. Set **Language** to `Docker` and keep **Dockerfile Path** as `./Dockerfile`.
+5. In **Docker Command**, enter exactly:
 
-```yaml
-# docker-compose.yml
-services:
-  nexotv:
-    image: ghcr.io/aerya/nexotv-enhanced:latest
-    container_name: nexotv-enhanced
-    ports:
-      - "7000:7000"
-    env_file:
-      - .env
-    environment:
-      CONFIG_SECRET: ${CONFIG_SECRET:?Set CONFIG_SECRET in the .env file}
-    volumes:
-      - ./data:/app/data     # persistence (cache + manifest references + saved configs)
-      - ./config:/app/config
-    restart: unless-stopped
+```bash
+node packages/backend/dist/server.js
 ```
 
-<<<<<<< HEAD
-  ### Déploiement sur Render (Web Service)
+6. Add `CONFIG_SECRET` in **Environment Variables**. It must be a random value of at least
+   16 characters.
+7. Do not set `PORT` manually. Render injects it automatically; the health check endpoint is
+   `/health`.
+8. Add a persistent Render disk mounted at `/app/data` to preserve SQLite data across redeploys.
+9. Click **Create Web Service**, then open the Render URL and go to `/configure`.
 
-  Pour que Render récupère automatiquement ce dépôt et construise l'image Docker :
+`WEBUI_PASSWORD` is optional. For a public instance, keep `ALLOW_LOCAL_URLS=false`.
 
-  1. Créer un **New Web Service** et sélectionner le dépôt `Aerya/nexotv-enhanced` :
-    `https://github.com/Aerya/nexotv-enhanced.git`.
-  2. Sélectionner la branche `main`, puis choisir **Runtime: Docker** et le fichier
-    `Dockerfile` à la racine du dépôt.
-  3. Dans **Docker Command**, utiliser exactement :
-
-  ```bash
-  node packages/backend/dist/server.js
-  ```
-
-  Render télécharge le dépôt et exécute automatiquement le build du `Dockerfile`. Il ne faut pas
-  ajouter de commande `git clone`, `docker pull` ou de port fixe. L'application utilise le `PORT`
-  fourni par Render.
-
-  Ajouter au minimum ces variables d'environnement dans Render :
-
-  ```text
-  CONFIG_SECRET=<une-valeur-secrète-aléatoire-d'au-moins-16-caractères>
-  ```
-
-  `WEBUI_PASSWORD` est optionnel. Pour conserver la base SQLite et les configurations après un
-  redéploiement, ajouter un disque persistant Render monté sur `/app/data`.
-
-### Variables d'environnement clés
-=======
 ### Key environment variables
->>>>>>> 1f52d152040f48b6eb887b808eb52bd7184ac158
 
 | Variable | Role | Default |
 |---|---|---|
-<<<<<<< HEAD
-| `ADDON_NAME` | Nom affiché dans Stremio/Nuvio | `NexoTV-Enhanced` |
-| `CONFIG_SECRET` | Chiffre les tokens et les sauvegardes ; **obligatoire pour une instance publique** (≥16 car.) | *(aucun)* |
-| `WEBUI_PASSWORD` | Active le mode privé commun : webui protégée, sauvegardes et statistiques partagées | *(mode public)* |
-| `WEBUI_SESSION_TTL_MS` | Durée de session | `2592000000` (30 j) |
-| `TMDB_API_KEY` | Clé TMDB **globale** de repli (la clé saisie dans la webui prime) | *(aucune)* |
-| `TMDB_LANGUAGE` | Langue TMDB par défaut | `fr-FR` |
-| `EPG_ENABLED` | Mettre `false` pour **désactiver l'EPG partout** (quel que soit le réglage des configs) | `true` |
-| `UPDATE_INTERVAL_MS` | Intervalle d'auto-refresh des chaînes | `14400000` (4 h) |
-| `EPG_UPDATE_INTERVAL_MS` | Intervalle de refresh EPG | `28800000` (8 h) |
-| `CACHE_TTL_MS` | TTL du cache disque | `86400000` (24 h) |
-| `ALLOW_LOCAL_URLS` | Autorise les URLs locales/privées pour les tests uniquement ; désactive la protection SSRF | `false` |
-
-Les URLs distantes sont résolues et contrôlées à chaque étape de redirection. Les adresses privées
-IPv4 et IPv6 sont bloquées par défaut ; ne mettre `ALLOW_LOCAL_URLS=true` que sur une instance locale
-non exposée.
-=======
 | `ADDON_NAME` | Name shown in Stremio/Nuvio | `NexoTV-Enhanced` |
 | `CONFIG_SECRET` | Encrypts tokens and saves; **required for public instances** (≥16 chars) | *(none)* |
 | `WEBUI_PASSWORD` | Enables shared private mode: protected webui, saved configs and statistics | *(public mode)* |
@@ -362,9 +248,9 @@ non exposée.
 | `UPDATE_INTERVAL_MS` | Channel auto-refresh interval | `14400000` (4 h) |
 | `EPG_UPDATE_INTERVAL_MS` | EPG refresh interval | `28800000` (8 h) |
 | `CACHE_TTL_MS` | Disk cache TTL | `86400000` (24 h) |
->>>>>>> 1f52d152040f48b6eb887b808eb52bd7184ac158
+| `ALLOW_LOCAL_URLS` | Allows private URLs for local testing only | `false` |
 
-> See [`.env.example`](.env.example) and the [upstream README](README.upstream.md) for the full list.
+> See [`.env.example`](.env.example) for the full list of environment variables.
 
 ---
 
