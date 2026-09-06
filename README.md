@@ -1,16 +1,13 @@
 <h1 align="center">NexoTV-Enhanced</h1>
 
-<p align="center"><strong><a href="README.en.md">🇬🇧 English version</a></strong></p>
-
 <p align="center">
-  <strong>Addon Stremio pour IPTV — <em>chaînes TV en direct</em> avant tout, plus catalogues
-  Films &amp; Séries, multi-source, sélection des catégories, authentification et configurations
-  sauvegardées.</strong>
+  <strong>Stremio IPTV addon — <em>live TV channels</em> first, plus Movies &amp; Series catalogs,
+  multi-source, category selection, authentication and saved configurations.</strong>
 </p>
 
-> **La base reste l'IPTV : les chaînes de TV en direct.** L'addon diffuse vos chaînes live (Xtream,
-> M3U/M3U+, IPTV-org, Stalker/Ministra) dans Stremio ; les catalogues Films & Séries (Xtream, Stalker)
-> viennent **en plus**.
+> **The core stays IPTV: live TV channels.** The addon streams your live channels (Xtream,
+> M3U/M3U+, IPTV-org, Stalker/Ministra) in Stremio; Movies & Series catalogs (Xtream, Stalker) come
+> **on top**.
 
 <p align="center">
   <a href="https://upandclear.org/2026/06/24/nexotv-enhanced/">
@@ -18,282 +15,272 @@
   </a>
 </p>
 
-> Présentation, installation et captures : **[upandclear.org — NexoTV Enhanced](https://upandclear.org/2026/06/24/nexotv-enhanced/)**
+> Overview, install guide and screenshots: **[upandclear.org — NexoTV Enhanced](https://upandclear.org/2026/06/24/nexotv-enhanced/)**
 
-> **Installation sans prise de tête : [guide pas à pas](INSTALLATION-FACILE.md).**
+> **Very easy installation (French): [step-by-step guide](INSTALLATION-FACILE.md).**
 
 ---
 
-## Origine du projet (attribution)
+## Project origin (attribution)
 
-Ce dépôt est un **fork amélioré** de **[joaosavi/nexotv](https://github.com/joaosavi/nexotv)**,
-créé par [@joaosavi](https://github.com/joaosavi) et distribué sous licence **MIT**.
+This repository is an **enhanced fork** of **[joaosavi/nexotv](https://github.com/joaosavi/nexotv)**,
+created by [@joaosavi](https://github.com/joaosavi) and distributed under the **MIT** license.
 
-Tout le mérite de l'addon d'origine (architecture, providers Xtream / M3U / IPTV-org, EPG, cache,
-sécurité SSRF, etc.) revient à son auteur. Ce dépôt **conserve la licence MIT** et ajoute des
-fonctionnalités au-dessus du code amont.
+All credit for the original addon (architecture, Xtream / M3U / IPTV-org providers, EPG, cache,
+SSRF protection, etc.) goes to its author. This repository **keeps the MIT license** and adds
+features on top of the upstream code.
 
-- Code source amont : https://github.com/joaosavi/nexotv
-- Documentation d'origine complète (déploiement détaillé, toutes les variables d'env, EPG…) :
+- Upstream source: https://github.com/joaosavi/nexotv
+- Full original documentation (detailed deployment, all env vars, EPG…):
   **[README.upstream.md](README.upstream.md)**
 
 ---
 
-## Ce que cette version ajoute
+## What this version adds
 
-| Domaine | Ajout |
+| Area | Addition |
 |---|---|
-| **Chaînes TV (live)** | Le cœur : diffuse vos **chaînes TV en direct** (Xtream, M3U/M3U+, IPTV-org, Stalker) dans Stremio, avec EPG, logos et recherche. *(socle hérité de l'amont, conservé.)* |
-| **Multi-source** | Ajouter **plusieurs sources** Xtream/M3U/Stalker mixées dans les mêmes catalogues, avec **déduplication Films/Séries** et choix du flux à la lecture. |
-| **Catégories** | La webui charge les catégories du flux, les **étiquette par type** (TV / Films / Séries) et permet de **cocher** celles à garder (filtre, tout / aucun / inverser). |
-| **Chaînes masquées** | Masquer individuellement des chaînes TV, avec recherche, filtre par catégorie et actions groupées. Elles sont retirées des catalogues et des routes de lecture. |
-| **Catalogues** | 3 mises en page : un seul catalogue, un par catégorie, ou des **catalogues personnalisés** (groupes nommés de catégories). |
-| **Accueil / Découvrir** | Choisir, par catalogue, lesquels s'affichent sur l'**accueil** ; les autres restent accessibles via **Découvrir**. |
-| **Films & Séries (Xtream)** | Les catégories Films/Séries deviennent de **vrais catalogues Stremio** `movie` / `series` jouables (séries avec **saisons + épisodes**). |
-| **M3U** | Les entrées `/movie/` sont exposées en catalogues `movie` (lecture directe). |
-| **Stalker** | Portail **Stalker / Ministra** (auth par MAC) en source **TV live + films (VOD) + séries** (mono **et** multi-source) ; films/séries enrichis TMDB et dédupliqués, flux résolus à la lecture via `create_link`. |
-| **Recherche** | Match **insensible aux accents/séparateurs** (`tf 1` ≈ `TF1`, `asterix` ≈ `Astérix`). |
-| **Authentification** | **Mot de passe unique** optionnel sur la webui. |
-| **Sauvegarde** | **Configurations sauvegardées côté serveur** (nommées, rechargeables). |
-| **Synopsis** | Films & séries avec **synopsis** (genres, casting, réalisateur, année) récupérés à l'ouverture de la fiche. |
-| **Enrichissement TMDB** | Clé TMDB (saisie dans la webui) → jaquettes/synopsis/casting **via TMDB** pour Films & Séries, avec **repli sur les données du fournisseur** si le titre n'est pas trouvé. |
-| **Statistiques** | Panneau **Statistiques** : journal de visionnage (heure, titre, IP, source/MAC, « en cours ») et nombre de **groupes TV / Films / Séries** par config. |
-| **Langue** | Sélecteur **EN / FR** dans l'en-tête (mémorisé dans le navigateur). |
-| **Affichage** | Logos de chaînes en affiches carrées ; nom de l'addon `NexoTV-Enhanced`. |
+| **Live TV channels** | The core: streams your **live TV channels** (Xtream, M3U/M3U+, IPTV-org, Stalker) in Stremio, with EPG, logos and search. *(upstream foundation, preserved.)* |
+| **Multi-source** | Add **several** Xtream/M3U/Stalker sources mixed into the same catalogs, with **Movies/Series de-duplication** and per-source stream choice. |
+| **Categories** | The webui loads the feed's categories, **labels them by type** (TV / Movies / Series) and lets you **pick** which ones to keep (filter, all / none / invert). |
+| **Hidden channels** | Hide individual live TV channels, with search, category filtering and bulk actions. They are removed from catalogs and playback routes. |
+| **Catalogs** | 3 layouts: a single catalog, one per category, or **custom catalogs** (named groups of categories). |
+| **Home / Discover** | Choose, per catalog, which ones show on the **home** board; the others stay accessible via **Discover**. |
+| **Movies & Series (Xtream)** | Movies/Series categories become **real playable Stremio catalogs** (`movie` / `series`, series with **seasons + episodes**). |
+| **M3U** | `/movie/` entries are exposed as `movie` catalogs (direct playback). |
+| **Stalker** | **Stalker / Ministra** portal (MAC auth) as a **live TV + movies (VOD) + series** source (single **and** multi-source); movies/series TMDB-enriched and de-duplicated, streams resolved on play via `create_link`. |
+| **Search** | Accent/separator-insensitive matching (`tf 1` ≈ `TF1`, `asterix` ≈ `Astérix`). |
+| **Authentication** | Optional **single password** on the webui. |
+| **Saved configs** | **Server-side saved configurations** (named, reloadable). |
+| **Synopsis** | Movies & series with **synopsis** (genres, cast, director, year) fetched when opening the detail page. |
+| **TMDB enrichment** | TMDB key (entered in the webui) → posters/synopsis/cast **via TMDB** for Movies & Series, with **fallback to provider data** when a title isn't found. |
+| **Statistics** | **Statistics** panel: viewing log (time, title, IP, source/MAC, "active") and the number of **TV / Movies / Series groups** per config. |
+| **Language** | **EN / FR** switch in the header (remembered in the browser). |
+| **Display** | Channel logos as square posters; addon name `NexoTV-Enhanced`. |
 
-> Entièrement **rétrocompatible** : sans sélection de catégories, le comportement reste celui de
-> l'addon d'origine (toutes les chaînes, un seul catalogue).
+> Fully **backward-compatible**: with no category selection, behaviour matches the original addon
+> (all channels, one catalog).
 
-## Mode public ou mode privé
+## Public mode or private mode
 
-NexoTV Enhanced propose deux usages volontairement distincts :
+NexoTV Enhanced deliberately supports two distinct deployment modes:
 
-| Mode | Fichier `.env` | Comportement |
+| Mode | `.env` file | Behaviour |
 |---|---|---|
-| **Public / communautaire** | `CONFIG_SECRET` uniquement | Chacun crée sa propre URL courte et opaque. Les configurations sauvegardées, statistiques et restaurations contenant des identifiants sont désactivées côté serveur. |
-| **Privé / foyer** | `CONFIG_SECRET` + `WEBUI_PASSWORD` | La webui demande le mot de passe. Les personnes qui le connaissent partagent les configurations sauvegardées et les statistiques de l'instance. |
+| **Public / community** | `CONFIG_SECRET` only | Everyone creates their own short, opaque URL. Server-side saved configs, statistics and credential-bearing token restore are disabled. |
+| **Private / household** | `CONFIG_SECRET` + `WEBUI_PASSWORD` | The web UI requires the shared password. Everyone who knows it shares the instance's saved configs and statistics. |
 
-`CONFIG_SECRET` ne crée pas de comptes : il chiffre les tokens personnels. `WEBUI_PASSWORD` ne crée
-pas non plus de comptes séparés : il ouvre un espace privé commun. Une URL personnelle d'addon doit
-toujours rester privée, car elle donne accès aux catalogues correspondants.
+`CONFIG_SECRET` encrypts personal tokens; it does not create accounts. `WEBUI_PASSWORD` opens one
+shared private space; it does not create separate users. Personal addon URLs must always stay private.
 
-La configuration chiffrée correspondant à l'URL courte est conservée dans `data/cache.sqlite`.
-Le volume `data/` doit donc rester monté et sauvegardé : supprimer cette base rend les URL courtes
-existantes inutilisables. Les anciennes URL contenant un token complet restent compatibles.
+The encrypted configuration behind each short URL is stored in `data/cache.sqlite`. Keep and back up
+the `data/` volume: deleting this database invalidates existing short URLs. Legacy URLs containing a
+full self-contained token remain compatible.
 
 ---
 
-## Captures d'écran
+## Screenshots
 
 ### Configuration (webui)
 
 | | |
 |---|---|
-| ![Onglet Xtream API](screenshots/1.png) | ![Sélection des catégories](screenshots/2.png) |
-| Onglet **Xtream API** : identifiants puis *Load categories*. | Mise en page + **filtre par type** (TV / Films / Séries). |
-| ![Custom catalogs — TV](screenshots/3.png) | ![Custom catalogs — Films](screenshots/4.png) |
-| Mode **Custom catalogs** : catalogue « TV King ». | Deux catalogues « TV King » et « Films King ». |
-| ![Installation — EPG](screenshots/5.png) | ![Installation — Ready](screenshots/6.png) |
-| Overlay d'installation (pré-vol Xtream, EPG). | Manifest prêt → *Open in Stremio* / *Copy URL*. |
+| ![Xtream API tab](screenshots/1.png) | ![Category selection](screenshots/2.png) |
+| **Xtream API** tab: credentials, then *Load categories*. | Layout + **type filter** (TV / Movies / Series). |
+| ![Custom catalogs — TV](screenshots/3.png) | ![Custom catalogs — Movies](screenshots/4.png) |
+| **Custom catalogs** mode: a "TV King" catalog. | Two catalogs "TV King" and "Films King". |
+| ![Install — EPG](screenshots/5.png) | ![Install — Ready](screenshots/6.png) |
+| Install overlay (Xtream pre-flight, EPG). | Manifest ready → *Open in Stremio* / *Copy URL*. |
 
-![Onglet Multi-source](screenshots/13.png)
+![Multi-source tab](screenshots/13.png)
 
-*Onglet **Multi-source** : deux sources (King365 + Pierot), catalogues personnalisés et choix de lecture (proposer le choix / lire le 1er dispo).*
+*The **Multi-source** tab: two sources (King365 + Pierot), custom catalogs and playback choice (offer the choice / play the first available).*
 
 ### Stremio
 
 | | |
 |---|---|
-| ![Addon installé](screenshots/7.png) | ![Accueil Stremio](screenshots/8.png) |
-| Addon **NexoTV Enhanced** installé. | Catalogues TV King / Films King / Séries King. |
-| ![Fiche film + synopsis](screenshots/9.png) | ![Multi-source : choix du flux](screenshots/14.png) |
-| Fiche film avec **synopsis**, note et genres. | Un film, **deux flux** (King365 / Prime+) — multi-source. |
+| ![Addon installed](screenshots/7.png) | ![Stremio home](screenshots/8.png) |
+| **NexoTV Enhanced** addon installed. | Catalogs TV King / Films King / Séries King. |
+| ![Movie detail + synopsis](screenshots/9.png) | ![Multi-source: stream choice](screenshots/14.png) |
+| Movie detail with **synopsis**, rating and genres. | One movie, **two streams** (King365 / Prime+) — multi-source. |
 
 ### Nuvio
 
 | | | |
 |---|---|---|
-| ![Accueil Nuvio](screenshots/10.png) | ![Fiche film Nuvio](screenshots/11.png) | ![Lecture Nuvio](screenshots/12.png) |
-| Accueil : TV King / Films King / Séries King. | Fiche film : *Lire*, casting. | Lecture (source NexoTV Enhanced). |
+| ![Nuvio home](screenshots/10.png) | ![Nuvio movie detail](screenshots/11.png) | ![Nuvio playback](screenshots/12.png) |
+| Home: TV King / Films King / Séries King. | Movie detail: *Play*, cast. | Playback (source NexoTV Enhanced). |
 
 ---
 
-## Fonctionnalités en détail
+## Features in detail
 
-### Catégories & catalogues
+### Categories & catalogs
 
-1. Page de configuration (`/configure`) → onglet **Xtream API** ou **M3U / M3U+** → saisir les
-   identifiants / l'URL de la playlist.
-2. Section **Categories** → **Load categories** : la liste s'affiche avec, pour chaque catégorie, un
-   badge **TV / Movie / Series** et le nombre de chaînes.
-   - Xtream : types lus via `get_live/vod/series_categories`.
-   - M3U : types déduits du chemin des URLs (`/live/` `/movie/` `/series/`).
-3. Cocher les catégories voulues, puis choisir la **mise en page** :
-   - **Single** — toutes les catégories réunies en un catalogue (les catégories restent un filtre de
-     genre interne) ;
-   - **Split** — un catalogue par catégorie ;
-   - **Custom** — des catalogues nommés, chacun regroupant les catégories de ton choix ; le **filtre
-     par type (TV / Films / Séries) est propre à chaque catalogue** lors de la sélection.
-4. Section **Sur l'accueil** : cocher les catalogues à afficher sur l'**accueil** Stremio ; ceux
-   décochés restent accessibles via **Découvrir** uniquement (techniquement : genre requis →
-   hors board mais présent dans Discover).
-5. **Install Addon** : la configuration est compressée, chiffrée puis stockée dans SQLite. Le
-   manifest utilise seulement une référence opaque de 36 caractères : ajouter beaucoup de providers
-   ou de catégories n'allonge plus l'URL.
+1. Configuration page (`/configure`) → **Xtream API** or **M3U / M3U+** tab → enter the
+   credentials / playlist URL.
+2. **Categories** section → **Load categories**: the list shows, for each category, a
+   **TV / Movie / Series** badge and the channel count.
+   - Xtream: types read from `get_live/vod/series_categories`.
+   - M3U: types inferred from the URL path (`/live/` `/movie/` `/series/`).
+3. Check the categories you want, then choose the **layout**:
+   - **Single** — all categories in one catalog (categories remain an internal genre filter);
+   - **Split** — one catalog per category;
+   - **Custom** — named catalogs, each grouping the categories of your choice; the **type filter
+     (TV / Movies / Series) is per-catalog** while selecting.
+4. **On the home screen** section: tick the catalogs to show on the Stremio **home** board; unticked
+   ones stay accessible via **Discover** only (technically: a required genre → off the board but
+   present in Discover).
+5. **Install Addon**: the configuration is compressed, encrypted, then stored in SQLite. The manifest
+   URL contains only a 36-character opaque reference, so adding many providers or categories no
+   longer makes the URL grow.
 
-### Masquer des chaînes individuellement
+### Hide individual channels
 
-Dans chacun des providers (Xtream, M3U, IPTV-org, Stalker et multi-source), la section **Chaînes**
-permet d'exclure des chaînes TV sans devoir retirer toute leur catégorie :
+In every provider (Xtream, M3U, IPTV-org, Stalker and multi-source), the **Channels** section lets
+you exclude individual live TV channels without removing their whole category:
 
-1. Clique **Charger les chaînes** après avoir renseigné le provider.
-2. Recherche une chaîne ou filtre la liste par catégorie, puis **décoche** les chaînes à masquer.
-   Les actions **Masquer le filtre** et **Afficher le filtre** appliquent le choix à tous les
-   résultats filtrés.
-3. Installe ou reconfigure l'addon pour enregistrer la sélection dans sa configuration.
+1. Click **Load channels** after entering the provider settings.
+2. Search for a channel or filter the list by category, then **untick** the channels to hide.
+   **Hide filtered** and **Show filtered** apply the choice to every filtered result.
+3. Install or reconfigure the addon to store the selection in its configuration.
 
-Les chaînes masquées ne figurent plus dans les catalogues Stremio et leurs routes de lecture sont
-également indisponibles. La sélection est spécifique à la configuration et reste conservée lors de
-sa sauvegarde ou de sa reconfiguration.
+Hidden channels no longer appear in Stremio catalogs, and their playback routes are unavailable as
+well. The selection is specific to each configuration and is retained when it is saved or
+reconfigured.
 
-### Films & Séries (Xtream)
+### Movies & Series (Xtream)
 
-Sélectionner une catégorie **Films** ou **Séries** en Xtream crée un catalogue Stremio typé :
+Selecting a **Movies** or **Series** category in Xtream creates a typed Stremio catalog:
 
-- **Films** → type `movie`, lecture directe du fichier (`/movie/USER/PASS/id.ext`).
-- **Séries** → type `series` : la fiche affiche **saisons + épisodes**, chargés à l'ouverture via
-  `get_series_info` (pas de pré-téléchargement massif), chaque épisode jouable.
+- **Movies** → `movie` type, direct file playback (`/movie/USER/PASS/id.ext`).
+- **Series** → `series` type: the detail page shows **seasons + episodes**, loaded on open via
+  `get_series_info` (no mass prefetch), each episode playable.
 
-Le type du catalogue suit le type de la catégorie : *split* → un catalogue par catégorie (du bon
-type) ; *custom* → un catalogue par groupe (type dominant) ; *single* → un catalogue **par type**
-(TV / Movies / Series). Côté **M3U**, les films (`/movie/`) deviennent des catalogues `movie` ; les
-séries restent à plat (un M3U ne porte pas d'arborescence saison/épisode).
+The catalog type follows the category type: *split* → one catalog per category (of the right type);
+*custom* → one catalog per group (dominant type); *single* → one catalog **per type**
+(TV / Movies / Series). On **M3U**, movies (`/movie/`) become `movie` catalogs; series stay flat
+(an M3U carries no season/episode structure).
 
-> Dans Stremio/Nuvio, les catalogues sont rangés **par type** : un catalogue Films apparaît sous
-> *Discover → Movies*, un catalogue Séries sous *Discover → Series*.
+> In Stremio/Nuvio, catalogs are grouped **by type**: a Movies catalog appears under
+> *Discover → Movies*, a Series catalog under *Discover → Series*.
 
-### Stalker / Ministra (TV live + films + séries)
+### Stalker / Ministra (live TV + movies + series)
 
-Onglet **Stalker** (et option **Stalker** dans le multi-source) : renseigne l'**URL du portail** et
-l'**adresse MAC**, clique **Charger les catégories**, sélectionne et compose tes catalogues comme
-pour les autres fournisseurs. La webui indique le **type** de chaque catégorie (TV / Films / Séries).
+**Stalker** tab (and a **Stalker** option in multi-source): enter the **portal URL** and **MAC
+address**, click **Load categories**, then select and build catalogs like any other provider. The
+webui labels each category's **type** (TV / Movies / Series).
 
-- Authentification par **handshake + token** (MAC), chemin `/c/portal.php` auto-détecté.
-- Catégories TV = **genres ITV** ; **Films** = **VOD** ; **Séries** = `type=series` du portail ;
-  listes paginées via `get_ordered_list`.
-- Les **films et séries Stalker** sont lisibles : synopsis + `tmdb_id` fournis par le portail,
-  enrichis via **TMDB** (clé saisie sur la webui) avec repli sur les données du portail.
-- **Séries** : saisons et épisodes récupérés via `movie_id` ; chaque épisode est résolu à la lecture
-  via `create_link&type=vod` avec la `cmd` de la saison + le n° d'épisode.
-- Les URLs de flux Stalker étant **dynamiques**, elles sont résolues **à la lecture** via
-  `create_link` (TV `type=itv`, films/épisodes `type=vod` ; token de lecture éphémère).
-- En multi-source, les **films et séries Stalker se dédupliquent** avec ceux d'Xtream/M3U partageant
-  le même titre (plusieurs sources → une fiche, plusieurs liens ; épisodes fusionnés par saison/n°).
+- **Handshake + token** authentication (MAC), `/c/portal.php` path auto-detected.
+- TV categories = **ITV genres**; **Movie** = portal **VOD**; **Series** = `type=series`; lists
+  paginated via `get_ordered_list`.
+- **Stalker movies and series are playable**: synopsis + `tmdb_id` come from the portal, enriched
+  via **TMDB** (key entered in the webui) with a fallback to portal data.
+- **Series**: seasons and episodes fetched via `movie_id`; each episode is resolved on play via
+  `create_link&type=vod` with the season's `cmd` + the episode number.
+- Stalker stream URLs are **dynamic**, so they are resolved **on play** via `create_link`
+  (TV `type=itv`, movies/episodes `type=vod`; ephemeral play token).
+- In multi-source, **Stalker movies and series de-duplicate** with Xtream/M3U ones sharing the same
+  title (several sources → one entry, multiple links; episodes merged by season/number).
 
-### Enrichissement TMDB (films & séries)
+### TMDB enrichment (movies & series)
 
-Renseigne une **clé API TMDB** dans la webui (section *Métadonnées (TMDB)*) pour récupérer de
-**belles métadonnées** (jaquette, synopsis, genres, casting, note) sur les fiches Films & Séries.
+Enter a **TMDB API key** in the webui (*Metadata (TMDB)* section) to fetch **rich metadata**
+(poster, synopsis, genres, cast, rating) on Movie & Series detail pages.
 
-- Priorité au **`tmdb_id` fourni par le panel** (match exact) ; sinon **recherche TMDB par titre + année**.
-- **Repli systématique** : si TMDB ne trouve rien (nommage exotique, contenu hors TMDB…), on **garde
-  les données du fournisseur** → rien n'est perdu.
-- Langue configurable (FR/EN). Les réponses TMDB sont mises en cache (~7 j).
-- Clé optionnelle : sans clé, le comportement reste celui d'avant (métadonnées du fournisseur).
+- Prefers the panel's **`tmdb_id`** (exact match); otherwise **TMDB search by title + year**.
+- **Always falls back**: if TMDB finds nothing (messy naming, content not on TMDB…), the **provider
+  data is kept** → nothing is lost.
+- Configurable language (FR/EN). TMDB responses are cached (~7 days).
+- Optional: without a key, behaviour is unchanged (provider metadata).
 
-> La clé peut aussi être fournie globalement côté serveur via `TMDB_API_KEY` (la clé de la webui
-> a priorité).
+> The key can also be set globally on the server via `TMDB_API_KEY` (the webui key takes priority).
 
-### Authentification (mot de passe unique)
+### Authentication (single password)
 
-- Activée uniquement si **`WEBUI_PASSWORD`** est définie (sinon UI ouverte — rétrocompatible).
-- Protège la page de configuration et ses endpoints (`/encrypt`, `/api/prefetch`).
-- **Les endpoints addon/flux restent publics** (Stremio/Nuvio ne s'authentifient pas).
-- Session par **cookie signé HMAC** (HttpOnly, SameSite=Lax, Secure derrière HTTPS), durée 30 j par
-  défaut (`WEBUI_SESSION_TTL_MS`), mot de passe comparé à temps constant, `/api/login` rate-limité.
-- Bouton **Déconnexion** dans l'en-tête (à côté du sélecteur EN/FR) quand tu es connecté.
-- Quand `WEBUI_PASSWORD` est absent, le configurateur reste public mais toutes les fonctions donnant
-  accès à des données globales ou à des identifiants en clair sont coupées côté serveur.
+- Enabled only when **`WEBUI_PASSWORD`** is set (otherwise the UI is open — backward-compatible).
+- Protects the configuration page and its endpoints (`/encrypt`, `/api/prefetch`).
+- **Addon/stream endpoints stay public** (Stremio/Nuvio cannot authenticate).
+- Session via a **signed HMAC cookie** (HttpOnly, SameSite=Lax, Secure behind HTTPS), 30-day default
+  (`WEBUI_SESSION_TTL_MS`), constant-time password comparison, rate-limited `/api/login`.
+- **Log out** button in the header (next to the EN/FR switch) when signed in.
+- Without `WEBUI_PASSWORD`, the configurator stays public while every endpoint exposing shared data
+  or plaintext credentials is disabled server-side.
 
-### Statistiques (visionnage & flux)
+### Statistics (viewing & feeds)
 
-Panneau **Statistiques** sur la webui (derrière l'authentification) :
+**Statistics** panel in the webui (behind auth):
 
-- **Visionnage (sortie)** : chaque demande de liens de lecture (`/stream`) est journalisée — **heure,
-  titre, type, IP** du demandeur, **source** et **MAC du portail** (Stalker) utilisés. Compteur
-  **« en cours (10 min) »** + historique. Journal en SQLite (capé à 2000 entrées / 30 j), effaçable.
-  > Limite : l'addon renvoie des **URLs directes** (le lecteur lit chez le fournisseur), il ne voit
-  > donc que l'**ouverture** d'un média — pas la **durée réelle** de visionnage.
-- **Flux d'entrée** : par configuration sauvegardée, le **nombre de groupes** (catégories) **TV /
-  Films / Séries** et le total d'éléments, calculés depuis le cache (sans re-fetch forcé).
+- **Viewing (output)**: every stream-list request (`/stream`) is logged — **time, title, type,
+  requester IP**, **source** and **Stalker portal MAC** used. An **"active (10 min)"** counter +
+  history. Stored in SQLite (capped at 2000 entries / 30 days), clearable.
+  > Limitation: the addon returns **direct URLs** (the player streams from the provider), so it only
+  > sees a media being **opened** — not the real **watch duration**.
+- **Incoming feeds**: per saved configuration, the **number of groups** (categories) **TV / Movies /
+  Series** and total items, computed from cache (no forced re-fetch).
 
-### Configurations sauvegardées (côté serveur)
+### Saved configurations (server-side)
 
-- Bouton **Save configuration** dans chaque provider → enregistre la config courante sous un nom.
-- Panneau **Saved configurations** : badge **du bon fournisseur** (Xtream / M3U / Stalker / Multi…),
-  **Load** (recharge la config déchiffrée côté serveur et restaure le formulaire) / **Delete**.
-- Disponibles uniquement en **mode privé**, lorsque `WEBUI_PASSWORD` est défini.
-- Stockées dans **SQLite** (`data/`, persistant via le volume Docker) et **chiffrées au repos** avec
-  `CONFIG_SECRET`. Ces configs sont **partagées** entre toutes les personnes connaissant le mot de
-  passe : il n'existe pas de comptes séparés.
-- En **mode public**, le bouton de sauvegarde et la liste sont masqués, et les routes correspondantes
-  répondent `403` même si elles sont appelées directement.
-- **Reconfigurer depuis Stremio** : rouvrir la config via le bouton *Configure* de Stremio restaure
-  le formulaire même quand le token est chiffré/compressé (déchiffrement serveur, derrière l'auth).
+- **Save configuration** button in each provider → stores the current config under a name.
+- **Saved configurations** panel: a **correct provider badge** (Xtream / M3U / Stalker / Multi…),
+  **Load** (fetches the server-decrypted config and restores the form) / **Delete**.
+- Available only in **private mode**, when `WEBUI_PASSWORD` is set.
+- Stored in **SQLite** (`data/`, persisted via the Docker volume) and **encrypted at rest** with
+  `CONFIG_SECRET`. Everyone who knows the password shares them; there are no separate accounts.
+- In **public mode**, save controls and the list are hidden, and direct API calls receive `403`.
+- **Reconfigure from Stremio**: reopening the config via Stremio's *Configure* button restores the
+  form even when the token is encrypted/compressed (server-side decode, behind auth).
 
-### Multi-source (mixage + déduplication)
+### Multi-source (mixing + de-duplication)
 
-Onglet **Multi-source** : ajoute plusieurs sources nommées (Xtream / M3U / Stalker), charge et
-sélectionne les catégories **par source**, puis choisis la mise en page (combiné par type / un
-catalogue par catégorie / personnalisé) et le **comportement de lecture**.
+**Multi-source** tab: add several named sources (Xtream / M3U / Stalker), load and select categories
+**per source**, then pick the layout (combined by type / one catalog per category / custom) and the
+**playback behaviour**.
 
-- **Mixage** : toutes les chaînes sélectionnées des sources sont fusionnées dans les catalogues.
-- **Déduplication Films/Séries** : les titres identiques (après normalisation : minuscules, sans
-  accents, sans tags `HD/4K/1080p/MULTI/VF…`) sont regroupés en **un seul élément** proposant
-  **un flux par source**, toutes sources confondues (Xtream / M3U / Stalker). Les **chaînes TV** ne
-  sont pas fusionnées (listées par source, suffixées du nom de la source).
-- **Séries** : épisodes fusionnés par (saison, épisode) entre sources (Xtream et Stalker).
-- **Lecture** (`streamSelection`, réglable dans la webui) :
-  - **Proposer le choix** → Stremio liste un flux par source (IPTV1 / IPTVPerso…) ;
-  - **Lire le 1er dispo** → seul le flux de la source prioritaire (ordre des sources).
-- **Limites** : pas d'EPG en multi-source pour l'instant ; côté M3U les séries restent à plat
-  (un M3U ne porte pas d'arborescence saison/épisode), seuls les films M3U sont dédupliqués.
+- **Mixing**: all selected channels from the sources are merged into the catalogs.
+- **Movies/Series de-duplication**: identical titles (after normalization: lowercase, no accents,
+  no `HD/4K/1080p/MULTI/VF…` tags) are grouped into **one item** offering **one stream per source**,
+  across all source types (Xtream / M3U / Stalker). **TV channels** are not merged (listed per
+  source, suffixed with the source name).
+- **Series**: episodes merged by (season, episode) across sources (Xtream and Stalker).
+- **Playback** (`streamSelection`, set in the webui):
+  - **Offer the choice** → Stremio lists one stream per source (IPTV1 / IPTVPerso…);
+  - **Play the first available** → only the priority source's stream (source order).
+- **Limitations**: no EPG in multi-source for now; on M3U, series stay flat (no season/episode tree),
+  only M3U movies are de-duplicated.
 
-> Les configs mono-source restent inchangées et pleinement supportées.
+> Single-source configs are unchanged and fully supported.
 
 ---
 
-## Rafraîchissement des flux & catalogues
+## Feed & catalog refresh
 
-Les données sont récupérées à la demande puis mises en cache ; les catalogues reflètent toujours la
-liste de chaînes courante.
+Data is fetched on demand then cached; catalogs always reflect the current channel list.
 
-- **Auto-refresh** en arrière-plan toutes les **4 h** (`UPDATE_INTERVAL_MS`) tant que l'instance est
-  active (disjoncteur après 3 échecs). **Réglable par configuration dans la webui** (champ « Mise à
-  jour automatique », 1 à 720 h) — surcharge la valeur globale pour cette config.
-- **Bootstrap** : la 1ʳᵉ requête de catalogue après un (re)build force un fetch frais (sauf si <2 min).
-- **Requêtes conditionnelles** ETag / `If-Modified-Since` → `304 Not Modified` = aucun re-traitement.
-- **Cache disque SQLite ~24 h** (`CACHE_TTL_MS`, `M3U_CACHE_TTL_MS`, `IPTV_ORG_CACHE_TTL_MS`),
-  **RAM évincée après 5 min** d'inactivité (`DATA_MEMORY_TTL_MS`).
-- **EPG** rafraîchi toutes les **8 h** (`EPG_UPDATE_INTERVAL_MS`).
-- **Xtream VOD + liste des séries** : récupérés dans le même appel que le live (même cadence). Les
-  **épisodes** sont chargés à la demande à chaque ouverture de fiche (toujours frais).
-- **Installation non bloquante** : le manifest est servi **immédiatement** et les données sont
-  récupérées **en tâche de fond** → aucun timeout à l'installation, même sur un gros panel ou un EPG
-  volumineux.
+- **Auto-refresh** in the background every **4 h** (`UPDATE_INTERVAL_MS`) while the instance is
+  active (circuit breaker after 3 failures). **Configurable per config in the webui** ("Auto-refresh"
+  field, 1–720 h) — overrides the global value for that config.
+- **Bootstrap**: the 1st catalog request after a (re)build forces a fresh fetch (unless <2 min).
+- **Conditional requests** ETag / `If-Modified-Since` → `304 Not Modified` = no re-processing.
+- **SQLite disk cache ~24 h** (`CACHE_TTL_MS`, `M3U_CACHE_TTL_MS`, `IPTV_ORG_CACHE_TTL_MS`),
+  **RAM evicted after 5 min** of inactivity (`DATA_MEMORY_TTL_MS`).
+- **EPG** refreshed every **8 h** (`EPG_UPDATE_INTERVAL_MS`).
+- **Xtream VOD + series list**: fetched in the same call as live (same cadence). **Episodes** are
+  loaded on demand each time a detail page is opened (always fresh).
+- **Non-blocking install**: the manifest is served **immediately** and data is fetched in the
+  **background** → no install timeout, even on a large panel or a heavy EPG.
 
-La **structure** des catalogues (lesquels, leurs types) est figée par le token : elle ne change qu'en
-**reconfigurant**.
+The catalog **structure** (which catalogs, their types) is fixed by the token: it only changes by
+**reconfiguring**.
 
 ---
 
-## Déploiement (Docker)
+## Deployment (Docker)
 
-Image multi-arch (amd64/arm64) publiée sur GHCR : `ghcr.io/aerya/nexotv-enhanced:latest`.
+Multi-arch image (amd64/arm64) published on GHCR: `ghcr.io/aerya/nexotv-enhanced:latest`.
 
-Pour une première installation ou une mise à jour d'instance publique, suivre le
-**[guide d'installation facile](INSTALLATION-FACILE.md)**. Il contient les commandes à copier-coller,
-la génération du secret et les deux vérifications de sécurité à effectuer.
+For a first install or a public-instance upgrade, use the **[easy installation guide](INSTALLATION-FACILE.md)**.
 
 ```yaml
 # docker-compose.yml
@@ -306,13 +293,14 @@ services:
     env_file:
       - .env
     environment:
-      CONFIG_SECRET: ${CONFIG_SECRET:?Définir CONFIG_SECRET dans le fichier .env}
+      CONFIG_SECRET: ${CONFIG_SECRET:?Set CONFIG_SECRET in the .env file}
     volumes:
-      - ./data:/app/data     # persistance (cache + références manifest + configs sauvegardées)
+      - ./data:/app/data     # persistence (cache + manifest references + saved configs)
       - ./config:/app/config
     restart: unless-stopped
 ```
 
+<<<<<<< HEAD
   ### Déploiement sur Render (Web Service)
 
   Pour que Render récupère automatiquement ce dépôt et construise l'image Docker :
@@ -341,9 +329,13 @@ services:
   redéploiement, ajouter un disque persistant Render monté sur `/app/data`.
 
 ### Variables d'environnement clés
+=======
+### Key environment variables
+>>>>>>> 1f52d152040f48b6eb887b808eb52bd7184ac158
 
-| Variable | Rôle | Défaut |
+| Variable | Role | Default |
 |---|---|---|
+<<<<<<< HEAD
 | `ADDON_NAME` | Nom affiché dans Stremio/Nuvio | `NexoTV-Enhanced` |
 | `CONFIG_SECRET` | Chiffre les tokens et les sauvegardes ; **obligatoire pour une instance publique** (≥16 car.) | *(aucun)* |
 | `WEBUI_PASSWORD` | Active le mode privé commun : webui protégée, sauvegardes et statistiques partagées | *(mode public)* |
@@ -359,49 +351,62 @@ services:
 Les URLs distantes sont résolues et contrôlées à chaque étape de redirection. Les adresses privées
 IPv4 et IPv6 sont bloquées par défaut ; ne mettre `ALLOW_LOCAL_URLS=true` que sur une instance locale
 non exposée.
+=======
+| `ADDON_NAME` | Name shown in Stremio/Nuvio | `NexoTV-Enhanced` |
+| `CONFIG_SECRET` | Encrypts tokens and saves; **required for public instances** (≥16 chars) | *(none)* |
+| `WEBUI_PASSWORD` | Enables shared private mode: protected webui, saved configs and statistics | *(public mode)* |
+| `WEBUI_SESSION_TTL_MS` | Session lifetime | `2592000000` (30 d) |
+| `TMDB_API_KEY` | **Global** TMDB fallback key (the webui key takes priority) | *(none)* |
+| `TMDB_LANGUAGE` | Default TMDB language | `fr-FR` |
+| `EPG_ENABLED` | Set to `false` to **disable EPG everywhere** (whatever each config's setting) | `true` |
+| `UPDATE_INTERVAL_MS` | Channel auto-refresh interval | `14400000` (4 h) |
+| `EPG_UPDATE_INTERVAL_MS` | EPG refresh interval | `28800000` (8 h) |
+| `CACHE_TTL_MS` | Disk cache TTL | `86400000` (24 h) |
+>>>>>>> 1f52d152040f48b6eb887b808eb52bd7184ac158
 
-> Voir [`.env.example`](.env.example) et le [README amont](README.upstream.md) pour la liste complète.
+> See [`.env.example`](.env.example) and the [upstream README](README.upstream.md) for the full list.
 
 ---
 
-## Démarrage rapide (dev)
+## Quick start (dev)
 
 ```bash
 pnpm install
-pnpm dev        # backend (port 7000) + frontend (Vite) en parallèle
+pnpm dev        # backend (port 7000) + frontend (Vite) in parallel
 ```
 
-Tests et vérifications :
+Tests and checks:
 
 ```bash
-pnpm --filter backend exec vitest run      # tests backend
+pnpm --filter backend exec vitest run      # backend tests
 pnpm --filter @nexotv/frontend build       # typecheck (vue-tsc) + build
 ```
 
 ---
 
-## Détails techniques
+## Technical notes
 
-- **Manifest dynamique** ([`manifest.ts`](packages/backend/src/addon/manifest.ts)) : `single` →
-  `iptv_channels` (+ `iptv_movies` / `iptv_series` selon les types) ; `split` → `iptv_cat_<n>` ;
-  `custom` → `iptv_grp_<n>`. `types[]` calculé dynamiquement.
-- **Champs de config** : `selectedCategories`, `catalogMode` (`single|split|custom`),
-  `catalogGroups`, `categoryTypes`.
-- **Résolution catalogue/flux/méta** : [`M3UEPGAddon.ts`](packages/backend/src/addon/M3UEPGAddon.ts)
+- **Dynamic manifest** ([`manifest.ts`](packages/backend/src/addon/manifest.ts)): `single` →
+  `iptv_channels` (+ `iptv_movies` / `iptv_series` depending on types); `split` → `iptv_cat_<n>`;
+  `custom` → `iptv_grp_<n>`. `types[]` computed dynamically.
+- **Config fields**: `selectedCategories`, `catalogMode` (`single|split|custom`),
+  `catalogGroups`, `categoryTypes`, `sources`, `streamSelection`.
+- **Catalog/stream/meta resolution**: [`M3UEPGAddon.ts`](packages/backend/src/addon/M3UEPGAddon.ts)
   (`resolveCatalog`, `itemsForCatalog`, `parseId`, `buildSeriesMeta`).
-- **URL manifest courte** : configuration compressée/chiffrée dans SQLite et référence opaque
-  persistante via [`configTokenStore.ts`](packages/backend/src/utils/configTokenStore.ts). Les anciens
-  tokens autonomes restent lus par [`cryptoConfig.ts`](packages/backend/src/utils/cryptoConfig.ts).
-- **Auth** : [`webauth.ts`](packages/backend/src/utils/webauth.ts) — **Stockage configs** :
+- **Short manifest URL**: compressed/encrypted configuration in SQLite with a persistent opaque
+  reference via [`configTokenStore.ts`](packages/backend/src/utils/configTokenStore.ts). Legacy
+  self-contained tokens remain supported by [`cryptoConfig.ts`](packages/backend/src/utils/cryptoConfig.ts).
+- **Auth**: [`webauth.ts`](packages/backend/src/utils/webauth.ts) — **Config store**:
   [`configStore.ts`](packages/backend/src/utils/configStore.ts).
-- **Frontend** (Vue 3) : [`CategorySelector.vue`](packages/frontend/src/components/CategorySelector.vue),
+- **Frontend** (Vue 3): [`CategorySelector.vue`](packages/frontend/src/components/CategorySelector.vue),
+  [`MultiSourceConfig.vue`](packages/frontend/src/components/MultiSourceConfig.vue),
   [`SavedConfigs.vue`](packages/frontend/src/components/SavedConfigs.vue),
   [`LoginGate.vue`](packages/frontend/src/components/LoginGate.vue).
 
 ---
 
-## Licence
+## License
 
-MIT — voir [LICENSE](LICENSE). Le copyright d'origine de
-[@joaosavi](https://github.com/joaosavi) est conservé ; les ajouts de ce fork sont publiés sous la
-même licence.
+MIT — see [LICENSE](LICENSE). The original copyright of
+[@joaosavi](https://github.com/joaosavi) is preserved; this fork's additions are released under the
+same license.
