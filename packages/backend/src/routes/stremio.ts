@@ -61,7 +61,7 @@ router.use('/:token', async (req: any, res, next) => {
                 interfaceCache.set(ifaceKey, iface);
             }
         } catch (e) {
-            console.error('[SERVER] Addon build failed:', e);
+            log.error('Addon build failed:', e);
             return res.status(500).json({ error: 'Addon build error' });
         }
     } else {
@@ -155,7 +155,7 @@ router.use('/:token', tokenLimiter, (req: any, res, next) => {
     const sdkRouter = getRouter(iface);
     sdkRouter(req, res, (err: any) => {
         if (err) {
-            console.error('[SERVER] Router error:', err);
+            log.error('Router error:', err);
             res.status(500).json({ error: 'Addon error' });
         } else {
             res.status(404).json({ error: 'Not found' });

@@ -7,6 +7,15 @@ const log = makeLogger();
 
 let db: Database.Database | null = null;
 
+/**
+ * Persistent SQLite cache with compression, TTL, and automatic expiry.
+ * Duck-types the ICache interface (see cacheInterface.ts).
+ * 
+ * Note: Set/get TTL behavior:
+ * - set(key, value, ttlMs) stores for ttlMs milliseconds
+ * - set(key, value, 0) stores permanently (common for config data)
+ */
+
 export function init(dbPath: string | null) {
     if (db) return db;
 
@@ -119,6 +128,30 @@ export function getRaw(key: string) {
 export function del(key: string) {
     if (!db) return;
     db.prepare('DELETE FROM CacheEntry WHERE key = ?').run(key);
+}
+
+/** Alias for del() to comply with ICache interface naming — note: cannot use 'delete' keyword */
+export function deleteEntry(key: string) {
+    del(key);
+}
+
+/** Check if a key exists and is not expired (ICache interface compliance) */
+export function has(key: string): boolean {
+    return get(key) !== null;
+}
+
+/** Get the number of cache entries (including expired). For metrics only. */
+export function getSize(): number {
+    if (!db) return 0;
+    const result = db.prepare('SELECT COUNT(*) as count FROM CacheEntry').get() as any;
+    return result?.count || 0;
+}
+
+/** Clear all cache entries */
+export function clear() {
+    if (!db) return;
+    db.prepare('DELETE FROM CacheEntry').run();
+    log.debug('Cache cleared');
 }
 
 export function cleanExpired() {

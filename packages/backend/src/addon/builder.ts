@@ -1,9 +1,12 @@
 import env from '../config/env';
 import { addonBuilder } from 'stremio-addon-sdk';
 import crypto from 'crypto';
+import { makeLogger } from '../utils/logger';
 import { createManifest } from './manifest';
 import { M3UEPGAddon, createCacheKey, buildPromiseCache, CACHE_ENABLED } from './M3UEPGAddon';
 import { AddonConfig } from './M3UEPGAddon';
+
+const log = makeLogger('[ADDON]');
 
 /** Lowercase, strip diacritics, drop non-alphanumerics — for fuzzy search. */
 function normalizeSearch(s: string): string {
@@ -30,13 +33,13 @@ async function createAddon(config: AddonConfig) {
     });
     const debugFlag = !!env.DEBUG;
     if (debugFlag) {
-        console.log('[DEBUG] createAddon start', { cacheKey, provider: config.provider || 'xtream' });
+        log.debug('createAddon start', { cacheKey, provider: config.provider || 'xtream' });
     } else {
-        console.log(`[ADDON] Cache ${CACHE_ENABLED ? 'ENABLED' : 'DISABLED'} for config ${cacheKey}`);
+        log.info(`Cache ${CACHE_ENABLED ? 'ENABLED' : 'DISABLED'} for config ${cacheKey}`);
     }
 
     if (CACHE_ENABLED && buildPromiseCache.has(cacheKey)) {
-        if (debugFlag) console.log('[DEBUG] Reusing build promise', cacheKey);
+        if (debugFlag) log.debug('Reusing build promise', cacheKey);
         return buildPromiseCache.get(cacheKey);
     }
 
@@ -53,7 +56,7 @@ async function createAddon(config: AddonConfig) {
             // Cache present → serve it; refresh in the background if stale.
             if (Date.now() - addonInstance.lastUpdate > addonInstance.updateInterval) {
                 addonInstance.updateData(true).catch((e: any) =>
-                    console.error('[ADDON] Background refresh failed:', e.message));
+                    log.error('Background refresh failed:', e.message));
             }
             if (CACHE_ENABLED) addonInstance._evictFromMemory();
         } else {
@@ -64,7 +67,7 @@ async function createAddon(config: AddonConfig) {
                     addonInstance.buildGenresInManifest();
                     if (CACHE_ENABLED) addonInstance._evictFromMemory();
                 })
-                .catch((e: any) => console.error('[ADDON] Background initial fetch failed:', e.message));
+                .catch((e: any) => log.error('Background initial fetch failed:', e.message));
         }
 
         // OPTIMIZATION: Start background refresh scheduler to silently update cache
@@ -103,7 +106,7 @@ async function createAddon(config: AddonConfig) {
                 const skip = parseInt(extra.skip || '0', 10) || 0;
                 const metas = items.slice(skip, skip + PAGE_SIZE).map((i: any) => addonInstance.generateMetaPreview(i));
                 if (env.DEBUG) {
-                    console.log('[DEBUG] Catalog handler', {
+                    log.debug('Catalog handler', {
                         type: args.type,
                         id: args.id,
                         totalItems: items.length,
@@ -113,7 +116,7 @@ async function createAddon(config: AddonConfig) {
                 }
                 return { metas };
             } catch (e) {
-                console.error('[CATALOG] Error', e);
+                log.error('Catalog handler error', e);
                 return { metas: [] };
             }
         });
@@ -123,11 +126,11 @@ async function createAddon(config: AddonConfig) {
                 const streams = await addonInstance.getStreams(id);
                 if (!streams || streams.length === 0) return { streams: [] };
                 if (env.DEBUG) {
-                    console.log('[DEBUG] Stream request', { id, count: streams.length });
+                    log.debug('Stream request', { id, count: streams.length });
                 }
                 return { streams };
             } catch (e) {
-                console.error('[STREAM] Error', e);
+                log.error('Stream handler error', e);
                 return { streams: [] };
             }
         });
@@ -136,11 +139,11 @@ async function createAddon(config: AddonConfig) {
             try {
                 const meta = await addonInstance.getDetailedMeta(id);
                 if (env.DEBUG) {
-                    console.log('[DEBUG] Meta request', { id, type });
+                    log.debug('Meta request', { id, type });
                 }
                 return { meta };
             } catch (e) {
-                console.error('[META] Error', e);
+                log.error('Meta handler error', e);
                 return { meta: null };
             }
         });

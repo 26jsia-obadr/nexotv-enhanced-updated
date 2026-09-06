@@ -2,6 +2,7 @@ import { parseEPG } from '../parsers/epgParser';
 import { validatePublicUrl } from '../utils/validateUrl';
 import { fetchPublicUrl } from '../utils/publicFetch';
 import env from '../config/env';
+import { fetchJson, categoryIdMap, selectedCategoryNames, selectedTypes } from './common';
 
 /**
  * Parse an Xtream date (ISO string, "0000-00-00", or unix seconds/ms) to an
@@ -18,48 +19,6 @@ export function safeIsoDate(v: any): string | null {
         d = new Date(s);
     }
     return isNaN(d.getTime()) ? null : d.toISOString();
-}
-
-async function fetchJson(url: string, ms: number): Promise<any> {
-    const resp = await fetchPublicUrl(url, {}, ms).catch(() => null);
-    if (!resp || !resp.ok) return null;
-    try { return await resp.json(); } catch { return null; }
-}
-
-/** Build a category_id → category_name map from a get_*_categories response. */
-function categoryIdMap(arr: any): Record<string, string> {
-    const map: Record<string, string> = {};
-    if (Array.isArray(arr)) {
-        for (const c of arr) {
-            if (c && c.category_id != null && c.category_name) {
-                map[String(c.category_id)] = String(c.category_name);
-            }
-        }
-    }
-    return map;
-}
-
-/** All category names the user selected (single/split + custom groups). */
-function selectedCategoryNames(config: any): Set<string> {
-    const out = new Set<string>();
-    for (const c of config.selectedCategories || []) {
-        if (typeof c === 'string' && c.trim()) out.add(c.trim());
-    }
-    for (const g of config.catalogGroups || []) {
-        for (const c of g?.categories || []) {
-            if (typeof c === 'string' && c.trim()) out.add(c.trim());
-        }
-    }
-    return out;
-}
-
-/** Which media types the selection covers, per config.categoryTypes. */
-function selectedTypes(config: any): Set<string> {
-    const names = selectedCategoryNames(config);
-    const types: Record<string, string> = config.categoryTypes || {};
-    const out = new Set<string>();
-    for (const n of names) out.add(types[n] || 'tv');
-    return out;
 }
 
 /**

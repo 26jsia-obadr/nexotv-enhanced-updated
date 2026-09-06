@@ -1,4 +1,10 @@
-class LRUCache {
+import { ICache } from './cacheInterface';
+
+/**
+ * In-memory LRU (Least Recently Used) cache with optional TTL support.
+ * Implements the ICache interface for easy swapping with other cache backends.
+ */
+class LRUCache implements ICache {
     max: number;
     ttl: number;
     map: Map<string, { value: any; expires: number | null }>;
@@ -24,9 +30,10 @@ class LRUCache {
         return entry.value;
     }
 
-    set(key: string, value: any) {
+    set(key: string, value: any, ttlMs?: number) {
+        const effectiveTtl = ttlMs !== undefined ? ttlMs : this.ttl;
         if (this.map.has(key)) this.map.delete(key);
-        this.map.set(key, { value, expires: this.ttl ? this._now() + this.ttl : null });
+        this.map.set(key, { value, expires: effectiveTtl ? this._now() + effectiveTtl : null });
         // Evict LRU
         if (this.map.size > this.max) {
             const oldestKey = this.map.keys().next().value;

@@ -6,22 +6,7 @@ import { fetchPublicUrl } from '../utils/publicFetch';
 import { titleHash } from '../addon/dedup';
 import * as stalkerProvider from './stalkerProvider';
 import env from '../config/env';
-
-async function fetchJson(url: string, ms: number): Promise<any> {
-    const resp = await fetchPublicUrl(url, {}, ms).catch(() => null);
-    if (!resp || !resp.ok) return null;
-    try { return await resp.json(); } catch { return null; }
-}
-
-function categoryIdMap(arr: any): Record<string, string> {
-    const map: Record<string, string> = {};
-    if (Array.isArray(arr)) {
-        for (const c of arr) {
-            if (c && c.category_id != null && c.category_name) map[String(c.category_id)] = String(c.category_name);
-        }
-    }
-    return map;
-}
+import { fetchJson, categoryIdMap } from './common';
 
 function selectionOf(src: any) {
     const selected = new Set<string>(
