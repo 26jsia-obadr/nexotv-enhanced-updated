@@ -1,7 +1,5 @@
 <h1 align="center">NexoTV-Enhanced</h1>
 
-<p align="center"><strong><a href="README.md">🇫🇷 Version française</a></strong></p>
-
 <p align="center">
   <strong>Stremio IPTV addon — <em>live TV channels</em> first, plus Movies &amp; Series catalogs,
   multi-source, category selection, authentication and saved configurations.</strong>
