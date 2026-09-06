@@ -216,7 +216,7 @@ web service, uses the Dockerfile start command, generates `CONFIG_SECRET`, confi
 adds the persistent `/app/data` disk automatically.
 
 1. In the Render dashboard, select **New +** → **Blueprint**.
-2. Connect `https://github.com/26jsia-obadr/nexotv-enhanced-updated` and select the `main` branch.
+2. Connect `https://github.com/nexnuvm/nexotv-enhanced-updated` and select the `main` branch.
 3. Review the plan and disk, then click **Apply**. The Blueprint uses Render's **Starter** plan
   because persistent disks are not available on the Free plan.
 4. Once deployed, open the Render URL and go to `/configure`.
