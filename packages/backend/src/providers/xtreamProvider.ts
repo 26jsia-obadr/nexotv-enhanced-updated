@@ -1,16 +1,7 @@
 import { parseEPG } from '../parsers/epgParser';
 import { validatePublicUrl } from '../utils/validateUrl';
+import { fetchPublicUrl } from '../utils/publicFetch';
 import env from '../config/env';
-
-async function withTimeout(url: string, options: any, ms: number) {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), ms);
-    try {
-        return await fetch(url, { ...options, signal: controller.signal });
-    } finally {
-        clearTimeout(timer);
-    }
-}
 
 /**
  * Parse an Xtream date (ISO string, "0000-00-00", or unix seconds/ms) to an
@@ -30,7 +21,7 @@ export function safeIsoDate(v: any): string | null {
 }
 
 async function fetchJson(url: string, ms: number): Promise<any> {
-    const resp = await withTimeout(url, {}, ms).catch(() => null);
+    const resp = await fetchPublicUrl(url, {}, ms).catch(() => null);
     if (!resp || !resp.ok) return null;
     try { return await resp.json(); } catch { return null; }
 }
@@ -147,22 +138,29 @@ export async function fetchData(addonInstance: any) {
     if (addonInstance.xtreamEtag) liveHeaders['If-None-Match'] = addonInstance.xtreamEtag;
 
     const [liveResp, liveCatsResp] = await Promise.all([
-        withTimeout(`${base}&action=get_live_streams`, { headers: liveHeaders }, env.FETCH_TIMEOUT_MS),
-        withTimeout(`${base}&action=get_live_categories`, {}, env.FETCH_TIMEOUT_MS).catch(() => null)
+        fetchPublicUrl(`${base}&action=get_live_streams`, { headers: liveHeaders }, env.FETCH_TIMEOUT_MS),
+        fetchPublicUrl(`${base}&action=get_live_categories`, {}, env.FETCH_TIMEOUT_MS).catch(() => null)
     ]);
 
-    if (liveResp.status === 304) {
+    const liveUnchanged = liveResp.status === 304;
+    if (liveUnchanged) {
         addonInstance.log?.debug('Xtream 304 Not Modified — skipping update');
-        return;
     }
-    if (!liveResp.ok) throw new Error('Xtream live streams fetch failed');
+    if (!liveUnchanged && !liveResp.ok) throw new Error('Xtream live streams fetch failed');
 
-    addonInstance.xtreamEtag = liveResp.headers.get('etag') ?? null;
+    if (!liveUnchanged) {
+        addonInstance.xtreamEtag = liveResp.headers.get('etag') ?? null;
+    }
 
-    addonInstance.channels = [];
-    addonInstance.epgData = {};
+    if (liveUnchanged) {
+        // Keep live channels, but rebuild optional catalogs below without duplicates.
+        addonInstance.channels = (addonInstance.channels || []).filter((channel: any) => channel.type === 'tv');
+    } else {
+        addonInstance.channels = [];
+        addonInstance.epgData = {};
+    }
 
-    const live = await liveResp.json();
+    const live = liveUnchanged ? [] : await liveResp.json();
 
     let liveCatMap: Record<string, string> = {};
     try {
@@ -177,24 +175,26 @@ export async function fetchData(addonInstance: any) {
         }
     } catch { /* ignore */ }
 
-    addonInstance.channels = (Array.isArray(live) ? live : []).map((s: any) => {
-        const cat = liveCatMap[s.category_id] || s.category_name || s.category_id || 'Live';
-        return {
-            id: `xc${addonInstance.idPrefix}_${s.stream_id}`,
-            name: s.name,
-            type: 'tv',
-            mediaType: 'tv',
-            url: `${xtreamUrl}/live/${xtreamUsername}/${xtreamPassword}/${s.stream_id}.m3u8`,
-            logo: s.stream_icon,
-            category: cat,
-            epg_channel_id: s.epg_channel_id,
-            attributes: {
-                'tvg-logo': s.stream_icon,
-                'tvg-id': s.epg_channel_id,
-                'group-title': cat
-            }
-        };
-    });
+    if (!liveUnchanged) {
+        addonInstance.channels = (Array.isArray(live) ? live : []).map((s: any) => {
+            const cat = liveCatMap[s.category_id] || s.category_name || s.category_id || 'Live';
+            return {
+                id: `xc${addonInstance.idPrefix}_${s.stream_id}`,
+                name: s.name,
+                type: 'tv',
+                mediaType: 'tv',
+                url: `${xtreamUrl}/live/${xtreamUsername}/${xtreamPassword}/${s.stream_id}.m3u8`,
+                logo: s.stream_icon,
+                category: cat,
+                epg_channel_id: s.epg_channel_id,
+                attributes: {
+                    'tvg-logo': s.stream_icon,
+                    'tvg-id': s.epg_channel_id,
+                    'group-title': cat
+                }
+            };
+        });
+    }
 
     // VOD (movies) and series are only fetched when the user actually selected
     // categories of that type — keeps the dataset small and avoids useless calls.
@@ -276,7 +276,7 @@ export async function fetchData(addonInstance: any) {
         if (epgStale) {
             try {
                 if (customEpgUrl) await validatePublicUrl(epgSource);
-                const epgResp = await withTimeout(epgSource, {}, env.EPG_FETCH_TIMEOUT_MS);
+                const epgResp = await fetchPublicUrl(epgSource, {}, env.EPG_FETCH_TIMEOUT_MS);
                 if (epgResp.ok) {
                     const contentLength = parseInt(epgResp.headers.get('content-length') ?? '0', 10);
                     if (contentLength > env.EPG_MAX_BYTES) {

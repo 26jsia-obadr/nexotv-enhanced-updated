@@ -25,20 +25,34 @@ export async function fetchData(addonInstance: any) {
 
     addonInstance.log.debug('[iptvOrg] Fetching channels + streams in parallel…');
 
-    const channelsResult = await fetchJsonConditional(
-        `${IPTV_ORG_BASE}/channels.json`,
-        addonInstance.iptvOrgEtag
-    );
+    const channelsUrl = `${IPTV_ORG_BASE}/channels.json`;
+    const channelsPromise = fetchJsonConditional(channelsUrl, addonInstance.iptvOrgEtag);
+    let channelsResult;
+    let streamsRaw;
+    let logosRaw;
+
+    if (addonInstance.iptvOrgEtag) {
+        channelsResult = await channelsPromise;
+        if (channelsResult.data === null) {
+            addonInstance.log.debug('[iptvOrg] 304 Not Modified — skipping update');
+            return;
+        }
+        [streamsRaw, logosRaw] = await Promise.all([
+            fetchJson(`${IPTV_ORG_BASE}/streams.json`),
+            fetchJson(`${IPTV_ORG_BASE}/logos.json`),
+        ]);
+    } else {
+        [channelsResult, streamsRaw, logosRaw] = await Promise.all([
+            channelsPromise,
+            fetchJson(`${IPTV_ORG_BASE}/streams.json`),
+            fetchJson(`${IPTV_ORG_BASE}/logos.json`),
+        ]);
+    }
 
     if (channelsResult.data === null) {
         addonInstance.log.debug('[iptvOrg] 304 Not Modified — skipping update');
         return;
     }
-
-    const [streamsRaw, logosRaw] = await Promise.all([
-        fetchJson(`${IPTV_ORG_BASE}/streams.json`),
-        fetchJson(`${IPTV_ORG_BASE}/logos.json`),
-    ]);
     const channelsRaw = channelsResult.data;
     addonInstance.iptvOrgEtag = channelsResult.etag;
 

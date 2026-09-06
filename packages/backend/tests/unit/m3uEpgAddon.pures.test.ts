@@ -92,6 +92,33 @@ describe('createCacheKey', () => {
     expect(key1).not.toBe(key2);
   });
 
+  it('changes when Xtream credentials change', () => {
+    const base = {
+      provider: 'xtream' as const,
+      xtreamUrl: 'http://a.com',
+      xtreamUsername: 'user',
+      xtreamPassword: 'old-password',
+    };
+    expect(createCacheKey(base)).not.toBe(createCacheKey({ ...base, xtreamPassword: 'new-password' }));
+  });
+
+  it('changes when a multi-source Xtream password changes', () => {
+    const base = {
+      sources: [{
+        id: 'main',
+        provider: 'xtream' as const,
+        name: 'Main',
+        xtreamUrl: 'http://a.com',
+        xtreamUsername: 'user',
+        xtreamPassword: 'old-password',
+      }],
+    };
+    expect(createCacheKey(base)).not.toBe(createCacheKey({
+      ...base,
+      sources: [{ ...base.sources[0], xtreamPassword: 'new-password' }],
+    }));
+  });
+
   it('ignores refreshHours (refresh cadence is not part of data identity)', () => {
     const base = { provider: 'xtream' as const, xtreamUrl: 'http://a.com', xtreamUsername: 'u' };
     expect(createCacheKey({ ...base })).toBe(createCacheKey({ ...base, refreshHours: 12 } as any));

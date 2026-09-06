@@ -2,22 +2,13 @@
 
 import { parseM3U } from '../parsers/m3uParser';
 import { validatePublicUrl } from '../utils/validateUrl';
+import { fetchPublicUrl } from '../utils/publicFetch';
 import { titleHash } from '../addon/dedup';
 import * as stalkerProvider from './stalkerProvider';
 import env from '../config/env';
 
-async function withTimeout(url: string, options: any, ms: number) {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), ms);
-    try {
-        return await fetch(url, { ...options, signal: controller.signal });
-    } finally {
-        clearTimeout(timer);
-    }
-}
-
 async function fetchJson(url: string, ms: number): Promise<any> {
-    const resp = await withTimeout(url, {}, ms).catch(() => null);
+    const resp = await fetchPublicUrl(url, {}, ms).catch(() => null);
     if (!resp || !resp.ok) return null;
     try { return await resp.json(); } catch { return null; }
 }
@@ -144,7 +135,7 @@ async function fetchM3uSource(src: any, idPrefix: string): Promise<any[]> {
     const url = (src.m3uUrl || '').trim();
     if (!url) return [];
     await validatePublicUrl(url);
-    const resp = await withTimeout(url, {}, env.FETCH_TIMEOUT_MS);
+    const resp = await fetchPublicUrl(url, {}, env.FETCH_TIMEOUT_MS);
     if (!resp.ok) throw new Error(`M3U fetch failed: HTTP ${resp.status}`);
     const text = await resp.text();
     const { channels: parsed } = parseM3U(text);

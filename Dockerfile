@@ -32,6 +32,6 @@ RUN mkdir -p /app/data
 EXPOSE 7000
 
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 --start-period=10s \
-  CMD wget -qO- http://localhost:7000/health || exit 1
+  CMD wget -qO- "http://127.0.0.1:${PORT:-7000}/health" || exit 1
 
 CMD ["node", "packages/backend/dist/server.js"]

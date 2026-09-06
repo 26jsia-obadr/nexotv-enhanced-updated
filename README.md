@@ -313,6 +313,33 @@ services:
     restart: unless-stopped
 ```
 
+  ### Déploiement sur Render (Web Service)
+
+  Pour que Render récupère automatiquement ce dépôt et construise l'image Docker :
+
+  1. Créer un **New Web Service** et sélectionner le dépôt `Aerya/nexotv-enhanced` :
+    `https://github.com/Aerya/nexotv-enhanced.git`.
+  2. Sélectionner la branche `main`, puis choisir **Runtime: Docker** et le fichier
+    `Dockerfile` à la racine du dépôt.
+  3. Dans **Docker Command**, utiliser exactement :
+
+  ```bash
+  node packages/backend/dist/server.js
+  ```
+
+  Render télécharge le dépôt et exécute automatiquement le build du `Dockerfile`. Il ne faut pas
+  ajouter de commande `git clone`, `docker pull` ou de port fixe. L'application utilise le `PORT`
+  fourni par Render.
+
+  Ajouter au minimum ces variables d'environnement dans Render :
+
+  ```text
+  CONFIG_SECRET=<une-valeur-secrète-aléatoire-d'au-moins-16-caractères>
+  ```
+
+  `WEBUI_PASSWORD` est optionnel. Pour conserver la base SQLite et les configurations après un
+  redéploiement, ajouter un disque persistant Render monté sur `/app/data`.
+
 ### Variables d'environnement clés
 
 | Variable | Rôle | Défaut |
@@ -327,6 +354,11 @@ services:
 | `UPDATE_INTERVAL_MS` | Intervalle d'auto-refresh des chaînes | `14400000` (4 h) |
 | `EPG_UPDATE_INTERVAL_MS` | Intervalle de refresh EPG | `28800000` (8 h) |
 | `CACHE_TTL_MS` | TTL du cache disque | `86400000` (24 h) |
+| `ALLOW_LOCAL_URLS` | Autorise les URLs locales/privées pour les tests uniquement ; désactive la protection SSRF | `false` |
+
+Les URLs distantes sont résolues et contrôlées à chaque étape de redirection. Les adresses privées
+IPv4 et IPv6 sont bloquées par défaut ; ne mettre `ALLOW_LOCAL_URLS=true` que sur une instance locale
+non exposée.
 
 > Voir [`.env.example`](.env.example) et le [README amont](README.upstream.md) pour la liste complète.
 

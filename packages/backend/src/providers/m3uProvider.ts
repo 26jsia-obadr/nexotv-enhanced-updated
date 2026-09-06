@@ -4,17 +4,8 @@ import crypto from 'crypto';
 import { parseM3U } from '../parsers/m3uParser';
 import { parseEPG } from '../parsers/epgParser';
 import { validatePublicUrl } from '../utils/validateUrl';
+import { fetchPublicUrl } from '../utils/publicFetch';
 import env from '../config/env';
-
-async function withTimeout(url: string, options: any, ms: number) {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), ms);
-    try {
-        return await fetch(url, { ...options, signal: controller.signal });
-    } finally {
-        clearTimeout(timer);
-    }
-}
 
 /**
  * Derive a stable 12-char hex ID for a channel.
@@ -44,7 +35,7 @@ export async function fetchData(addonInstance: any) {
         conditionalHeaders['If-Modified-Since'] = addonInstance.m3uLastModified;
     }
 
-    const resp = await withTimeout(m3uUrl.trim(), { headers: conditionalHeaders }, env.FETCH_TIMEOUT_MS);
+    const resp = await fetchPublicUrl(m3uUrl.trim(), { headers: conditionalHeaders }, env.FETCH_TIMEOUT_MS);
 
     if (resp.status === 304) {
         addonInstance.log?.debug('M3U 304 Not Modified — skipping parse');
@@ -110,7 +101,7 @@ export async function fetchData(addonInstance: any) {
             if (epgStale) {
                 try {
                     await validatePublicUrl(epgSource);
-                    const epgResp = await withTimeout(epgSource, {}, env.EPG_FETCH_TIMEOUT_MS);
+                    const epgResp = await fetchPublicUrl(epgSource, {}, env.EPG_FETCH_TIMEOUT_MS);
                     if (epgResp.ok) {
                         const contentLength = parseInt(epgResp.headers.get('content-length') ?? '0', 10);
                         if (contentLength > env.EPG_MAX_BYTES) {

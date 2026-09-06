@@ -32,6 +32,13 @@ describe('isPrivateIp', () => {
     }
   );
 
+  it.each(['fc00::1', 'fd12:3456::1', 'fe80::1', '::ffff:127.0.0.1'])(
+    'blocks private IPv6 address %s', (ip) => {
+      mockEnv.ALLOW_LOCAL_URLS = false;
+      expect(isPrivateIp(ip)).toBe(true);
+    }
+  );
+
   it('returns false for all IPs when ALLOW_LOCAL_URLS=true', () => {
     mockEnv.ALLOW_LOCAL_URLS = true;
     expect(isPrivateIp('127.0.0.1')).toBe(false);

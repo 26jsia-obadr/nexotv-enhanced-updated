@@ -107,7 +107,9 @@ function mediaTypeOf(item: any): MediaType {
 }
 
 function stableStringify(obj: any) {
-    return JSON.stringify(obj, Object.keys(obj).sort());
+    if (obj === null || typeof obj !== 'object') return JSON.stringify(obj);
+    if (Array.isArray(obj)) return `[${obj.map(stableStringify).join(',')}]`;
+    return `{${Object.keys(obj).sort().map(key => `${JSON.stringify(key)}:${stableStringify(obj[key])}`).join(',')}}`;
 }
 
 /** Normalize the catalog selection into a stable, comparable form for the cache key. */
@@ -161,6 +163,7 @@ export function createCacheKey(config: AddonConfig) {
                 name: (s.name || '').trim(),
                 xtreamUrl: s.xtreamUrl || null,
                 xtreamUsername: s.xtreamUsername || null,
+                xtreamPassword: s.xtreamPassword || null,
                 m3uUrl: s.m3uUrl || null,
                 stalkerUrl: s.stalkerUrl || null,
                 stalkerMac: s.stalkerMac || null,
@@ -209,6 +212,7 @@ export function createCacheKey(config: AddonConfig) {
             enableEpg: !!config.enableEpg,
             xtreamUrl: config.xtreamUrl,
             xtreamUsername: config.xtreamUsername,
+            xtreamPassword: config.xtreamPassword,
             epgOffsetHours: config.epgOffsetHours,
             reformatLogos: !!config.reformatLogos,
             ...normalizeSelection(config),

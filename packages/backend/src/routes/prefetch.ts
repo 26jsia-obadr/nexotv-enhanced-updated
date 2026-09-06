@@ -1,13 +1,11 @@
 'use strict';
 
 import { Router } from 'express';
-import dns from 'dns';
 import env from '../config/env';
 import { makeLogger } from '../utils/logger';
-import { isPrivateIp } from '../middleware/ssrf';
+import { fetchPublicUrl } from '../utils/publicFetch';
 import { requireAuth } from '../utils/webauth';
 
-const dnsPromises = dns.promises;
 const router = Router();
 const log = makeLogger();
 
@@ -22,46 +20,11 @@ router.post('/api/prefetch', requireAuth, async (req, res) => {
     if (!/^https?:\/\//i.test(url)) return res.status(400).json({ error: 'Only http(s) URLs allowed' });
 
     try {
-        const u = new URL(url);
-        const host = u.hostname;
-        if (
-            !env.ALLOW_LOCAL_URLS && (
-                host === 'localhost' ||
-                host === '0.0.0.0' ||
-                /^127\./.test(host) ||
-                /^10\./.test(host) ||
-                /^192\.168\./.test(host) ||
-                /^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(host) ||
-                /^169\.254\./.test(host)
-            )
-        ) {
-            return res.status(400).json({ error: 'Blocked host' });
-        }
-
         log.debug('Prefetch start', { url, purpose });
-
-        try {
-            const resolved = await dnsPromises.lookup(u.hostname);
-            if (isPrivateIp(resolved.address)) {
-                return res.status(400).json({ error: 'Blocked host' });
-            }
-        } catch {
-            return res.status(400).json({ error: 'Cannot resolve host' });
-        }
-
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), env.PREFETCH_TIMEOUT_MS);
-
-        let fetched: Response;
-        try {
-            fetched = await fetch(url, {
-                method: 'GET',
-                signal: controller.signal,
-                headers: { 'User-Agent': 'NexoTV Prefetch/2.0' }
-            });
-        } finally {
-            clearTimeout(timeout);
-        }
+        const fetched = await fetchPublicUrl(url, {
+            method: 'GET',
+            headers: { 'User-Agent': 'NexoTV Prefetch/2.0' }
+        }, env.PREFETCH_TIMEOUT_MS);
 
         if (!fetched.ok) {
             log.debug('Prefetch non-OK', fetched.status, url);
@@ -135,6 +98,9 @@ router.post('/api/prefetch', requireAuth, async (req, res) => {
         });
     } catch (e: any) {
         log.debug('Prefetch error', e.message);
+        if (e.message?.startsWith('Blocked host') || e.message?.startsWith('Cannot resolve host')) {
+            return res.status(400).json({ error: e.message });
+        }
         res.status(500).json({
             error: 'Prefetch error',
             detail: env.DEBUG ? e.message : undefined

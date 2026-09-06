@@ -27,11 +27,15 @@ export async function validatePublicUrl(url: string): Promise<void> {
         throw new Error(`Blocked host: ${host}`);
     }
 
-    // DNS resolution — covers hostnames that resolve to private IPs
+    // Check every DNS answer so a dual-stack or multi-address host cannot hide
+    // a private address behind a public first result.
     try {
-        const { address } = await dns.promises.lookup(host);
-        if (isPrivateIp(address)) {
-            throw new Error(`Blocked host: ${host} resolves to private IP ${address}`);
+        const resolved = await dns.promises.lookup(host, { all: true });
+        const addresses = Array.isArray(resolved) ? resolved : [resolved];
+        for (const { address } of addresses) {
+            if (isPrivateIp(address)) {
+                throw new Error(`Blocked host: ${host} resolves to private IP ${address}`);
+            }
         }
     } catch (e: any) {
         if (e.message?.startsWith('Blocked host')) throw e;

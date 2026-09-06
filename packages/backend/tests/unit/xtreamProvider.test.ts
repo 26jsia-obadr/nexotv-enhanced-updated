@@ -1,5 +1,17 @@
-import { describe, it, expect } from 'vitest';
-import { safeIsoDate } from '../../src/providers/xtreamProvider';
+import { afterEach, describe, it, expect, vi } from 'vitest';
+
+vi.mock('../../src/utils/validateUrl', () => ({ validatePublicUrl: vi.fn().mockResolvedValue(undefined) }));
+vi.mock('../../src/utils/publicFetch', () => ({ fetchPublicUrl: vi.fn() }));
+vi.mock('../../src/config/env', () => ({ default: {
+  EPG_ENABLED: false,
+  FETCH_TIMEOUT_MS: 1000,
+  EPG_FETCH_TIMEOUT_MS: 1000,
+  EPG_UPDATE_INTERVAL_MS: 3600000,
+  EPG_MAX_BYTES: 1000000,
+} }));
+
+import { fetchData, safeIsoDate } from '../../src/providers/xtreamProvider';
+import { fetchPublicUrl } from '../../src/utils/publicFetch';
 
 // Regression guard: a bad episode date used to throw RangeError in
 // new Date(x).toISOString(), which made the whole series meta return null
@@ -26,5 +38,35 @@ describe('safeIsoDate', () => {
   it('never throws on garbage input', () => {
     expect(() => safeIsoDate({} as any)).not.toThrow();
     expect(() => safeIsoDate([] as any)).not.toThrow();
+  });
+});
+
+describe('fetchData', () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  it('refreshes selected VOD when live streams return 304', async () => {
+    vi.mocked(fetchPublicUrl)
+      .mockResolvedValueOnce(new Response(null, { status: 304 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify([])))
+      .mockResolvedValueOnce(new Response(JSON.stringify([{ category_id: '1', category_name: 'Movies' }])))
+      .mockResolvedValueOnce(new Response(JSON.stringify([{ stream_id: '7', name: 'Film', category_id: '1' }])));
+
+    const addon = {
+      config: {
+        xtreamUrl: 'https://iptv.example', xtreamUsername: 'user', xtreamPassword: 'pass',
+        selectedCategories: ['Movies'], categoryTypes: { Movies: 'movie' }, enableEpg: false,
+      },
+      idPrefix: 'abc123',
+      xtreamEtag: 'etag',
+      channels: [{ id: 'live-1', name: 'Live', type: 'tv' }, { id: 'old-movie', type: 'movie' }],
+      epgData: {},
+      log: { debug: vi.fn(), warn: vi.fn() },
+    };
+
+    await fetchData(addon);
+
+    expect(addon.channels.map((channel: any) => channel.name)).toEqual(['Live', 'Film']);
+    expect(addon.channels).toHaveLength(2);
+    expect(addon.channels[0].id).toBe('live-1');
   });
 });

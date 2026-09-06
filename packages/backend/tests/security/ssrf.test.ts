@@ -7,6 +7,7 @@ vi.mock('../../src/config/env', () => ({ default: mockEnv, repoRoot: '/tmp' }));
 
 import dns from 'dns';
 import { validatePublicUrl } from '../../src/utils/validateUrl';
+import { fetchPublicUrl } from '../../src/utils/publicFetch';
 import { fetchData as m3uFetchData } from '../../src/providers/m3uProvider';
 import { fetchData as xtreamFetchData } from '../../src/providers/xtreamProvider';
 
@@ -61,6 +62,25 @@ describe('validatePublicUrl', () => {
 
   it('returns immediately for empty URL', async () => {
     await expect(validatePublicUrl('')).resolves.toBeUndefined();
+  });
+
+  it('blocks private IPv6 URL literals', async () => {
+    await expect(validatePublicUrl('http://[fd00::1]/playlist.m3u')).rejects.toThrow('Blocked host');
+  });
+});
+
+describe('fetchPublicUrl', () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  it('validates redirect destinations before fetching them', async () => {
+    vi.spyOn(dns.promises, 'lookup').mockResolvedValue({ address: '93.184.216.34', family: 4 });
+    vi.spyOn(global, 'fetch').mockResolvedValue({
+      status: 302,
+      headers: { get: (name: string) => name === 'location' ? 'http://127.0.0.1/admin' : null },
+    } as unknown as Response);
+
+    await expect(fetchPublicUrl('http://example.com/redirect')).rejects.toThrow('Blocked host');
+    expect(global.fetch).toHaveBeenCalledTimes(1);
   });
 });
 

@@ -316,6 +316,10 @@ services:
 | `UPDATE_INTERVAL_MS` | Channel auto-refresh interval | `14400000` (4 h) |
 | `EPG_UPDATE_INTERVAL_MS` | EPG refresh interval | `28800000` (8 h) |
 | `CACHE_TTL_MS` | Disk cache TTL | `86400000` (24 h) |
+| `ALLOW_LOCAL_URLS` | Allow local/private URLs for testing only; disables SSRF protection | `false` |
+
+Remote URLs are resolved and checked at every redirect hop. Private IPv4 and IPv6 addresses are
+blocked by default; set `ALLOW_LOCAL_URLS=true` only on a local, unexposed instance.
 
 > See [`.env.example`](.env.example) and the [upstream README](README.upstream.md) for the full list.
 

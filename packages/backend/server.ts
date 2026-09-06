@@ -77,7 +77,7 @@ app.use((error: any, req: any, res: any, next: any) => {
     if (!res.headersSent) res.status(500).json({ error: 'Internal server error' });
 });
 
-app.listen(env.PORT, () => {
+app.listen(env.PORT, '0.0.0.0', () => {
     console.log(`🚀 Server running → http://localhost:${env.PORT} (debug=${env.DEBUG}, prefetch=${env.PREFETCH_ENABLED})`);
 
     if (env.CACHE_ENABLED) {
