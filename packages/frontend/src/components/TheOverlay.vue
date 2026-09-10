@@ -45,9 +45,36 @@ watch(() => props.details, () => {
   }
 })
 
+function getInstallUrl(): string {
+  return props.stremioUrl || props.manifestUrl
+}
+
+function copyText(value: string): Promise<void> {
+  if (navigator.clipboard && window.isSecureContext) {
+    return navigator.clipboard.writeText(value)
+  }
+
+  const textarea = document.createElement('textarea')
+  textarea.value = value
+  textarea.setAttribute('readonly', '')
+  textarea.style.position = 'fixed'
+  textarea.style.left = '-9999px'
+  textarea.style.top = '-9999px'
+  textarea.style.opacity = '0'
+  document.body.appendChild(textarea)
+  textarea.focus()
+  textarea.select()
+
+  const copied = document.execCommand('copy')
+  textarea.remove()
+  return copied ? Promise.resolve() : Promise.reject(new Error('Copy failed'))
+}
+
 function copyManifest() {
-  if (!props.manifestUrl) return
-  navigator.clipboard.writeText(props.manifestUrl)
+  const url = getInstallUrl()
+  if (!url) return
+
+  copyText(url)
     .then(() => {
       copyLabel.value = 'Copied!'
       setTimeout(() => { copyLabel.value = 'Copy URL' }, 1600)
@@ -59,6 +86,22 @@ function copyManifest() {
 }
 
 function openStremio() {
-  if (props.stremioUrl) window.location.href = props.stremioUrl
+  const url = getInstallUrl()
+  if (!url) return
+
+  try {
+    const link = document.createElement('a')
+    link.href = url
+    link.rel = 'noopener noreferrer'
+    link.style.display = 'none'
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    return
+  } catch {
+    // Fall back to direct navigation if custom-protocol launching is blocked.
+  }
+
+  window.location.href = url
 }
 </script>

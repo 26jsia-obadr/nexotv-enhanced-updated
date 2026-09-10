@@ -1,6 +1,14 @@
 import type { AddonConfig } from '../types/config'
 import { useAuth } from './useAuth'
 
+function encodeConfigBase64Url(config: AddonConfig): string {
+  const json = JSON.stringify(config)
+  const bytes = new TextEncoder().encode(json)
+  let binary = ''
+  bytes.forEach(byte => { binary += String.fromCharCode(byte) })
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+}
+
 export function useConfigToken(appendDetail: (line: string) => void) {
   async function buildUrls(config: AddonConfig): Promise<{ token: string; manifestUrl: string; stremioUrl: string }> {
     let token = ''
@@ -23,15 +31,13 @@ export function useConfigToken(appendDetail: (line: string) => void) {
         token = data.token
         appendDetail('✔ Config securely encrypted and stored with a short URL')
       } else {
-        appendDetail(`⚠ Encryption unavailable (HTTP ${res.status}). No manifest URL was created.`)
-        throw new Error(`Encryption unavailable (HTTP ${res.status}). Please try again.`)
+        appendDetail(`⚠ Encryption unavailable (HTTP ${res.status}). Falling back to Base64 (Not Secure).`)
+        token = encodeConfigBase64Url(config)
       }
     } catch (e: any) {
       if (e?.auth) throw e // propagate auth errors so the gate shows
-      if (!e?.message?.startsWith('Encryption unavailable')) {
-        appendDetail(`⚠ Encryption error (${e.message}). No manifest URL was created.`)
-      }
-      throw e
+      appendDetail(`⚠ Encryption error (${e.message}). Falling back to Base64 (Not Secure).`)
+      token = encodeConfigBase64Url(config)
     }
 
     // In dev mode the frontend runs on a different port (5173) from the backend (7000).
